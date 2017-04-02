@@ -7,10 +7,8 @@ import java.util.Map.Entry;
 import net.citizensnpcs.api.ai.speech.SpeechFactory;
 import net.citizensnpcs.api.ai.speech.Talkable;
 import net.citizensnpcs.api.ai.speech.VocalChord;
-
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
-
+import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.entity.living.Living;
 import com.google.common.base.Preconditions;
 
 public class CitizensSpeechFactory implements SpeechFactory {
@@ -66,7 +64,7 @@ public class CitizensSpeechFactory implements SpeechFactory {
         return new TalkableEntity(entity);
     }
 
-    public Talkable newTalkableEntity(LivingEntity entity) {
+    public Talkable newTalkableEntity(Living entity) {
         return newTalkableEntity((Entity) entity);
     }
 

@@ -9,14 +9,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
-
 import com.google.common.base.Preconditions;
 
 import net.citizensnpcs.Settings;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.util.NMS;
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.entity.living.player.Player;
 
 /**
  * Sends remove packets in batch per player.
@@ -26,7 +25,7 @@ import net.citizensnpcs.util.NMS;
  * </p>
  */
 public class TabListRemover {
-    private final Map<UUID, PlayerEntry> pending = new HashMap<UUID, PlayerEntry>(Bukkit.getMaxPlayers() / 2);
+    private final Map<UUID, PlayerEntry> pending = new HashMap<UUID, PlayerEntry>(Sponge.getServer().getMaxPlayers() / 2);
 
     TabListRemover() {
         Bukkit.getScheduler().runTaskTimer(CitizensAPI.getPlugin(), new Sender(), 2, 2);

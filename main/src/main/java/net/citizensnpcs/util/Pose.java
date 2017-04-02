@@ -1,7 +1,7 @@
 package net.citizensnpcs.util;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 /*
  * Pose object which holds yaw/pitch of the head with a name to identify.

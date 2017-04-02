@@ -2,8 +2,8 @@ package net.citizensnpcs.trait.waypoint.triggers;
 
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.persistence.Persist;
-
-import org.bukkit.Location;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 public class SpeedTrigger implements WaypointTrigger {
     @Persist
@@ -26,7 +26,7 @@ public class SpeedTrigger implements WaypointTrigger {
     }
 
     @Override
-    public void onWaypointReached(NPC npc, Location waypoint) {
+    public void onWaypointReached(NPC npc, Location<World> waypoint) {
         npc.getNavigator().getDefaultParameters().speedModifier(speed);
     }
 }

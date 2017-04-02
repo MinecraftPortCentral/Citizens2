@@ -1,6 +1,6 @@
 package net.citizensnpcs.util;
 
-import org.bukkit.entity.Player;
+import org.spongepowered.api.entity.living.player.Player;
 
 public enum PlayerAnimation {
     ARM_SWING,

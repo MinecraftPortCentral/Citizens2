@@ -4,18 +4,7 @@ import java.lang.reflect.Constructor;
 import java.util.List;
 import java.util.Map;
 
-import org.bukkit.Location;
-import org.bukkit.entity.EnderDragon;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.util.Vector;
-
+import com.flowpowered.math.vector.Vector3d;
 import com.google.common.collect.Maps;
 
 import net.citizensnpcs.Settings.Setting;
@@ -30,6 +19,16 @@ import net.citizensnpcs.api.trait.trait.Owner;
 import net.citizensnpcs.api.util.DataKey;
 import net.citizensnpcs.util.NMS;
 import net.citizensnpcs.util.Util;
+import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.entity.EntityType;
+import org.spongepowered.api.entity.EntityTypes;
+import org.spongepowered.api.entity.living.complex.EnderDragon;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.Order;
+import org.spongepowered.api.event.block.InteractBlockEvent;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 @TraitName("controllable")
 public class Controllable extends Trait implements Toggleable, CommandConfigurable {
@@ -52,11 +51,11 @@ public class Controllable extends Trait implements Toggleable, CommandConfigurab
     @Override
     public void configure(CommandContext args) {
         if (args.hasFlag('f')) {
-            explicitType = EntityType.BLAZE;
+            explicitType = EntityTypes.BLAZE;
         } else if (args.hasFlag('g')) {
-            explicitType = EntityType.OCELOT;
+            explicitType = EntityTypes.OCELOT;
         } else if (args.hasFlag('o')) {
-            explicitType = EntityType.UNKNOWN;
+            explicitType = EntityTypes.UNKNOWN;
         } else if (args.hasFlag('r')) {
             explicitType = null;
         } else if (args.hasValueFlag("explicittype")) {
@@ -137,8 +136,8 @@ public class Controllable extends Trait implements Toggleable, CommandConfigurab
         return true;
     }
 
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
-    public void onPlayerInteract(PlayerInteractEvent event) {
+    @Listener(order = Order.POST)
+    public void onPlayerInteract(InteractBlockEvent event) {
         if (!npc.isSpawned() || !enabled)
             return;
         Action performed = event.getAction();
@@ -158,7 +157,7 @@ public class Controllable extends Trait implements Toggleable, CommandConfigurab
         }
     }
 
-    @EventHandler
+    @Listener
     public void onRightClick(NPCRightClickEvent event) {
         if (!enabled || !npc.isSpawned() || !event.getNPC().equals(npc))
             return;
@@ -197,8 +196,8 @@ public class Controllable extends Trait implements Toggleable, CommandConfigurab
     private void setMountedYaw(Entity entity) {
         if (entity instanceof EnderDragon || !Setting.USE_BOAT_CONTROLS.asBoolean())
             return; // EnderDragon handles this separately
-        Location loc = entity.getLocation();
-        Vector vel = entity.getVelocity();
+        Location<World> loc = entity.getLocation();
+        Vector3d vel = entity.getVelocity();
         if (vel.lengthSquared() == 0) {
             return;
         }
@@ -260,11 +259,11 @@ public class Controllable extends Trait implements Toggleable, CommandConfigurab
         private double speed = 0.07D;
 
         @Override
-        public void leftClick(PlayerInteractEvent event) {
+        public void leftClick(InteractBlockEvent event) {
         }
 
         @Override
-        public void rightClick(PlayerInteractEvent event) {
+        public void rightClick(InteractBlockEvent event) {
         }
 
         @Override
@@ -301,12 +300,12 @@ public class Controllable extends Trait implements Toggleable, CommandConfigurab
         private boolean paused = false;
 
         @Override
-        public void leftClick(PlayerInteractEvent event) {
+        public void leftClick(InteractBlockEvent event) {
             paused = !paused;
         }
 
         @Override
-        public void rightClick(PlayerInteractEvent event) {
+        public void rightClick(InteractBlockEvent event) {
             paused = !paused;
         }
 
@@ -321,17 +320,17 @@ public class Controllable extends Trait implements Toggleable, CommandConfigurab
                 npc.getEntity().setVelocity(npc.getEntity().getVelocity().setY(0.001));
                 return;
             }
-            Vector dir = rider.getEyeLocation().getDirection();
-            dir.multiply(npc.getNavigator().getDefaultParameters().speedModifier());
+            Vector3d dir = rider.getEyeLocation().getDirection();
+            dir.mul(npc.getNavigator().getDefaultParameters().speedModifier());
             npc.getEntity().setVelocity(dir);
             setMountedYaw(npc.getEntity());
         }
     }
 
     public static interface MovementController {
-        void leftClick(PlayerInteractEvent event);
+        void leftClick(InteractBlockEvent event);
 
-        void rightClick(PlayerInteractEvent event);
+        void rightClick(InteractBlockEvent event);
 
         void rightClickEntity(NPCRightClickEvent event);
 
@@ -343,12 +342,12 @@ public class Controllable extends Trait implements Toggleable, CommandConfigurab
         private double speed;
 
         @Override
-        public void leftClick(PlayerInteractEvent event) {
+        public void leftClick(InteractBlockEvent event) {
             paused = !paused;
         }
 
         @Override
-        public void rightClick(PlayerInteractEvent event) {
+        public void rightClick(InteractBlockEvent event) {
             npc.getEntity().setVelocity(npc.getEntity().getVelocity().setY(-0.3F));
         }
 
@@ -369,7 +368,7 @@ public class Controllable extends Trait implements Toggleable, CommandConfigurab
             if (shouldJump) {
                 npc.getEntity().setVelocity(npc.getEntity().getVelocity().setY(0.3F));
             }
-            npc.getEntity().setVelocity(npc.getEntity().getVelocity().multiply(new Vector(1, 0.98, 1)));
+            npc.getEntity().setVelocity(npc.getEntity().getVelocity().mul(new Vector3d(1, 0.98, 1)));
         }
     }
 
@@ -381,11 +380,11 @@ public class Controllable extends Trait implements Toggleable, CommandConfigurab
             .newEnumMap(EntityType.class);
 
     static {
-        controllerTypes.put(EntityType.BAT, PlayerInputAirController.class);
-        controllerTypes.put(EntityType.BLAZE, PlayerInputAirController.class);
-        controllerTypes.put(EntityType.ENDER_DRAGON, PlayerInputAirController.class);
-        controllerTypes.put(EntityType.GHAST, PlayerInputAirController.class);
-        controllerTypes.put(EntityType.WITHER, PlayerInputAirController.class);
-        controllerTypes.put(EntityType.UNKNOWN, LookAirController.class);
+        controllerTypes.put(EntityTypes.BAT, PlayerInputAirController.class);
+        controllerTypes.put(EntityTypes.BLAZE, PlayerInputAirController.class);
+        controllerTypes.put(EntityTypes.ENDER_DRAGON, PlayerInputAirController.class);
+        controllerTypes.put(EntityTypes.GHAST, PlayerInputAirController.class);
+        controllerTypes.put(EntityTypes.WITHER, PlayerInputAirController.class);
+        controllerTypes.put(EntityTypes.UNKNOWN, LookAirController.class);
     }
 }

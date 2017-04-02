@@ -2,10 +2,7 @@ package net.citizensnpcs.npc.ai;
 
 import java.util.List;
 
-import org.bukkit.Location;
-import org.bukkit.entity.Entity;
-import org.bukkit.util.Vector;
-
+import com.flowpowered.math.vector.Vector3d;
 import com.google.common.collect.Lists;
 
 import net.citizensnpcs.api.ai.AbstractPathStrategy;
@@ -14,17 +11,20 @@ import net.citizensnpcs.api.ai.TargetType;
 import net.citizensnpcs.api.ai.event.CancelReason;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.util.NMS;
+import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 public class MCNavigationStrategy extends AbstractPathStrategy {
     private final Entity handle;
     private final MCNavigator navigator;
     private final NavigatorParameters parameters;
-    private final Location target;
+    private final Location<World> target;
 
-    MCNavigationStrategy(final NPC npc, Iterable<Vector> path, NavigatorParameters params) {
+    MCNavigationStrategy(final NPC npc, Iterable<Vector3d> path, NavigatorParameters params) {
         super(TargetType.LOCATION);
-        List<Vector> list = Lists.newArrayList(path);
-        this.target = list.get(list.size() - 1).toLocation(npc.getStoredLocation().getWorld());
+        List<Vector3d> list = Lists.newArrayList(path);
+        this.target = list.get(list.size() - 1).toLocation(npc.getStoredLocation().getExtent());
         this.parameters = params;
         handle = npc.getEntity();
         this.navigator = NMS.getTargetNavigator(npc.getEntity(), list, params);
@@ -39,16 +39,16 @@ public class MCNavigationStrategy extends AbstractPathStrategy {
     }
 
     private double distanceSquared() {
-        return handle.getLocation(HANDLE_LOCATION).distanceSquared(target);
+        return handle.getLocation().getPosition().distanceSquared(target.getPosition());
     }
 
     @Override
-    public Iterable<Vector> getPath() {
+    public Iterable<Vector3d> getPath() {
         return navigator.getPath();
     }
 
     @Override
-    public Location getTargetAsLocation() {
+    public Location<World> getTargetAsLocation() {
         return target;
     }
 
@@ -86,12 +86,12 @@ public class MCNavigationStrategy extends AbstractPathStrategy {
     public static interface MCNavigator {
         CancelReason getCancelReason();
 
-        Iterable<Vector> getPath();
+        Iterable<Vector3d> getPath();
 
         void stop();
 
         boolean update();
     }
 
-    private static final Location HANDLE_LOCATION = new Location(null, 0, 0, 0);
+    private static final Location<World> HANDLE_LOCATION = new Location<World>(null, 0, 0, 0);
 }

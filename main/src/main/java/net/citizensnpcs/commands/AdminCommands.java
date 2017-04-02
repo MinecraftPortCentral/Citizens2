@@ -1,7 +1,5 @@
 package net.citizensnpcs.commands;
 
-import org.bukkit.command.CommandSender;
-
 import net.citizensnpcs.Citizens;
 import net.citizensnpcs.api.command.Command;
 import net.citizensnpcs.api.command.CommandContext;
@@ -12,6 +10,7 @@ import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.util.Messaging;
 import net.citizensnpcs.util.Messages;
 import net.citizensnpcs.util.StringHelper;
+import org.spongepowered.api.command.CommandSource;
 
 @Requirements
 public class AdminCommands {
@@ -22,12 +21,12 @@ public class AdminCommands {
     }
 
     @Command(aliases = { "citizens" }, desc = "Show basic plugin information", max = 0, permission = "citizens.admin")
-    public void citizens(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    public void citizens(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         Messaging.send(sender,
-                "          " + StringHelper.wrapHeader("<e>Citizens v" + plugin.getDescription().getVersion()));
+                "          " + StringHelper.wrapHeader("<e>Citizens v" + plugin.pluginContainer.getVersion()));
         Messaging.send(sender, "     <7>-- <c>Written by fullwall and aPunch");
         Messaging.send(sender, "     <7>-- <c>Source Code: http://github.com/CitizensDev");
-        Messaging.send(sender, "     <7>-- <c>Website: " + plugin.getDescription().getWebsite());
+        Messaging.send(sender, "     <7>-- <c>Website: " + plugin.pluginContainer.getUrl().orElse(""));
     }
 
     @Command(
@@ -38,7 +37,7 @@ public class AdminCommands {
             min = 1,
             max = 1,
             permission = "citizens.admin")
-    public void reload(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    public void reload(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         Messaging.sendTr(sender, Messages.CITIZENS_RELOADING);
         try {
             plugin.reload();
@@ -59,7 +58,7 @@ public class AdminCommands {
             max = 1,
             flags = "a",
             permission = "citizens.admin")
-    public void save(CommandContext args, CommandSender sender, NPC npc) {
+    public void save(CommandContext args, CommandSource sender, NPC npc) {
         Messaging.sendTr(sender, Messages.CITIZENS_SAVING);
         plugin.storeNPCs(args);
         Messaging.sendTr(sender, Messages.CITIZENS_SAVED);

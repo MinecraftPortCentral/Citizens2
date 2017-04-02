@@ -3,8 +3,7 @@ package net.citizensnpcs.trait.waypoint;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.bukkit.command.CommandSender;
-
+import org.spongepowered.api.command.CommandSource;
 import com.google.common.collect.Maps;
 
 import net.citizensnpcs.api.command.CommandContext;
@@ -36,7 +35,7 @@ public class Waypoints extends Trait {
         }
     }
 
-    public void describeProviders(CommandSender sender) {
+    public void describeProviders(CommandSource sender) {
         Messaging.sendTr(sender, Messages.AVAILABLE_WAYPOINT_PROVIDERS);
         for (String name : providers.keySet()) {
             Messaging.send(sender, "    - " + StringHelper.wrap(name));
@@ -59,7 +58,7 @@ public class Waypoints extends Trait {
         return providerName;
     }
 
-    public Editor getEditor(CommandSender player, CommandContext args) {
+    public Editor getEditor(CommandSource player, CommandContext args) {
         return provider.createEditor(player, args);
     }
 

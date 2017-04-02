@@ -8,18 +8,6 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
-import org.bukkit.conversations.Conversation;
-import org.bukkit.conversations.ConversationAbandonedEvent;
-import org.bukkit.conversations.ConversationAbandonedListener;
-import org.bukkit.conversations.ConversationFactory;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.plugin.Plugin;
-
 import com.google.common.collect.Maps;
 
 import net.citizensnpcs.Settings.Setting;
@@ -36,9 +24,13 @@ import net.citizensnpcs.editor.Editor;
 import net.citizensnpcs.trait.Toggleable;
 import net.citizensnpcs.util.Messages;
 import net.citizensnpcs.util.Util;
+import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.entity.living.player.gamemode.GameModes;
+import org.spongepowered.api.event.Listener;
 
 @TraitName("text")
-public class Text extends Trait implements Runnable, Toggleable, Listener, ConversationAbandonedListener {
+public class Text extends Trait implements Runnable, Toggleable {
     private final Map<UUID, Date> cooldowns = Maps.newHashMap();
     private int currentIndex;
     private String itemInHandPattern = "default";
@@ -111,7 +103,7 @@ public class Text extends Trait implements Runnable, Toggleable, Listener, Conve
         itemInHandPattern = key.getString("talkitem", itemInHandPattern);
     }
 
-    @EventHandler
+    @Listener
     public void onRightClick(NPCRightClickEvent event) {
         if (!event.getNPC().equals(npc))
             return;
@@ -133,9 +125,9 @@ public class Text extends Trait implements Runnable, Toggleable, Listener, Conve
     public void run() {
         if (!talkClose || !npc.isSpawned())
             return;
-        List<Entity> nearby = npc.getEntity().getNearbyEntities(range, range, range);
+        List<Entity> nearby = npc.getEntity().getNearbyEntities(range);
         for (Entity search : nearby) {
-            if (!(search instanceof Player) || ((Player) search).getGameMode() == GameMode.SPECTATOR)
+            if (!(search instanceof Player) || ((Player) search).getGameMode() == GameModes.SPECTATOR)
                 continue;
             Player player = (Player) search;
             // If the cooldown is not expired, do not send text

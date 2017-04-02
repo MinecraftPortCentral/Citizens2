@@ -2,12 +2,7 @@ package net.citizensnpcs.trait.text;
 
 import net.citizensnpcs.api.util.Messaging;
 import net.citizensnpcs.util.Messages;
-
-import org.bukkit.ChatColor;
-import org.bukkit.conversations.ConversationContext;
-import org.bukkit.conversations.NumericPrompt;
-import org.bukkit.conversations.Prompt;
-import org.bukkit.entity.Player;
+import net.minecraft.util.text.TextFormatting;
 
 public class PageChangePrompt extends NumericPrompt {
     private final Text text;
@@ -28,7 +23,7 @@ public class PageChangePrompt extends NumericPrompt {
 
     @Override
     public String getFailedValidationText(ConversationContext context, String input) {
-        return ChatColor.RED + Messaging.tr(Messages.TEXT_EDITOR_INVALID_PAGE);
+        return TextFormatting.RED + Messaging.tr(Messages.TEXT_EDITOR_INVALID_PAGE);
     }
 
     @Override

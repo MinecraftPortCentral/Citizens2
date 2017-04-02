@@ -3,21 +3,7 @@ package net.citizensnpcs.util;
 import java.util.Collection;
 import java.util.List;
 
-import org.bukkit.Location;
-import org.bukkit.World;
-import org.bukkit.block.Block;
-import org.bukkit.boss.BossBar;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.FishHook;
-import org.bukkit.entity.Horse;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Tameable;
-import org.bukkit.entity.Wither;
-import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
-import org.bukkit.inventory.meta.SkullMeta;
-import org.bukkit.util.Vector;
-
+import com.flowpowered.math.vector.Vector3i;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.GameProfileRepository;
 
@@ -31,19 +17,31 @@ import net.citizensnpcs.api.npc.NPCRegistry;
 import net.citizensnpcs.npc.ai.MCNavigationStrategy.MCNavigator;
 import net.citizensnpcs.npc.ai.MCTargetStrategy.TargetNavigator;
 import net.citizensnpcs.npc.skin.SkinnableEntity;
+import org.spongepowered.api.block.BlockType;
+import org.spongepowered.api.block.tileentity.Skull;
+import org.spongepowered.api.data.manipulator.mutable.entity.TameableData;
+import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.entity.living.Living;
+import org.spongepowered.api.entity.living.animal.Horse;
+import org.spongepowered.api.entity.living.monster.Wither;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.entity.projectile.FishHook;
+import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 public interface NMSBridge {
-    public boolean addEntityToWorld(Entity entity, SpawnReason custom);
+    public boolean addEntityToWorld(Entity entity, Cause cause);
 
     public void addOrRemoveFromPlayerList(Entity entity, boolean remove);
 
-    public void attack(LivingEntity attacker, LivingEntity target);
+    public void attack(Living attacker, Living target);
 
     public GameProfile fillProfileProperties(GameProfile profile, boolean requireSecure) throws Exception;
 
-    public BlockBreaker getBlockBreaker(Entity entity, Block targetBlock, BlockBreakerConfiguration config);
+    public BlockBreaker getBlockBreaker(Entity entity, BlockType targetBlock, BlockBreakerConfiguration config);
 
-    public BossBar getBossBar(Entity entity);
+    //public BossBar getBossBar(Entity entity);
 
     public BoundingBox getBoundingBox(Entity handle);
 
@@ -57,7 +55,7 @@ public interface NMSBridge {
 
     public List<Entity> getPassengers(Entity entity);
 
-    public GameProfile getProfile(SkullMeta meta);
+    public GameProfile getProfile(Skull meta);
 
     public String getSound(String flag) throws CommandException;
 
@@ -67,9 +65,9 @@ public interface NMSBridge {
 
     public TargetNavigator getTargetNavigator(Entity handle, Entity target, NavigatorParameters parameters);
 
-    public MCNavigator getTargetNavigator(Entity entity, Iterable<Vector> dest, NavigatorParameters params);
+    public MCNavigator getTargetNavigator(Entity entity, Iterable<Vector3i> dest, NavigatorParameters params);
 
-    public MCNavigator getTargetNavigator(Entity entity, Location dest, NavigatorParameters params);
+    public MCNavigator getTargetNavigator(Entity entity, Location<World> dest, NavigatorParameters params);
 
     public Entity getVehicle(Entity entity);
 
@@ -85,7 +83,7 @@ public interface NMSBridge {
 
     public void look(Entity entity, float yaw, float pitch);
 
-    public void look(Entity entity, Location to, boolean headOnly, boolean immediate);
+    public void look(Entity entity, Location<World> to, boolean headOnly, boolean immediate);
 
     public void mount(Entity entity, Entity passenger);
 
@@ -97,13 +95,13 @@ public interface NMSBridge {
 
     public void removeFromServerPlayerList(Player player);
 
-    public void removeFromWorld(org.bukkit.entity.Entity entity);
+    public void removeFromWorld(Entity entity);
 
     public void removeHookIfNecessary(NPCRegistry npcRegistry, FishHook entity);
 
     public void replaceTrackerEntry(Player player);
 
-    public void sendPositionUpdate(Player excluding, Entity from, Location storedLocation);
+    public void sendPositionUpdate(Player excluding, Entity from, Location<World> storedLocation);
 
     public void sendTabListAdd(Player recipient, Player listPlayer);
 
@@ -115,15 +113,15 @@ public interface NMSBridge {
 
     public void setHeadYaw(Entity entity, float yaw);
 
-    public void setKnockbackResistance(LivingEntity entity, double d);
+    public void setKnockbackResistance(Living entity, double d);
 
     public void setNavigationTarget(Entity handle, Entity target, float speed);
 
-    public void setProfile(SkullMeta meta, GameProfile profile);
+    public void setProfile(Skull meta, GameProfile profile);
 
     public void setShouldJump(Entity entity);
 
-    public void setSitting(Tameable tameable, boolean sitting);
+    public void setSitting(TameableData tameable, boolean sitting);
 
     public void setStepHeight(Entity entity, float height);
 

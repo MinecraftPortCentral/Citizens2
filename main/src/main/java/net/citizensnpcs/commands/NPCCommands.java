@@ -8,31 +8,8 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.DyeColor;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
-import org.bukkit.boss.BarColor;
-import org.bukkit.boss.BarFlag;
-import org.bukkit.command.BlockCommandSender;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.ConsoleCommandSender;
-import org.bukkit.entity.Ageable;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Horse.Color;
-import org.bukkit.entity.Horse.Style;
-import org.bukkit.entity.ItemFrame;
-import org.bukkit.entity.Ocelot;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Rabbit;
-import org.bukkit.entity.Villager.Profession;
-import org.bukkit.entity.Zombie;
-import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
-
+import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.entity.living.Ageable;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
@@ -114,9 +91,9 @@ public class NPCCommands {
             min = 1,
             max = 2,
             permission = "citizens.npc.age")
-    public void age(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
-        if (!npc.isSpawned() || (!(npc.getEntity() instanceof Ageable) && !(npc.getEntity() instanceof Zombie)))
-            throw new CommandException(Messages.MOBTYPE_CANNOT_BE_AGED, npc.getName());
+    public void age(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
+        if (!npc.isSpawned() || !(npc.getEntity() instanceof Ageable))
+            throw new CommandException(Messages.MOBTYPE_CANNOT_BE_AGED);
         Age trait = npc.getTrait(Age.class);
 
         boolean toggleLock = args.hasFlag('l');
@@ -158,7 +135,7 @@ public class NPCCommands {
             min = 1,
             max = 3,
             permission = "citizens.npc.anchor")
-    public void anchor(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    public void anchor(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         Anchors trait = npc.getTrait(Anchors.class);
         if (args.hasValueFlag("save")) {
             if (args.getFlag("save").isEmpty())

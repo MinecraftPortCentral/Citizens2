@@ -3,11 +3,7 @@ package net.citizensnpcs.trait.waypoint.triggers;
 import net.citizensnpcs.api.util.Messaging;
 import net.citizensnpcs.trait.waypoint.WaypointEditor;
 import net.citizensnpcs.util.Messages;
-
-import org.bukkit.command.CommandSender;
-import org.bukkit.conversations.ConversationContext;
-import org.bukkit.conversations.Prompt;
-import org.bukkit.conversations.StringPrompt;
+import org.spongepowered.api.command.CommandSource;
 
 public class TriggerAddPrompt extends StringPrompt {
     private final WaypointEditor editor;
@@ -25,7 +21,7 @@ public class TriggerAddPrompt extends StringPrompt {
         }
         Prompt prompt = WaypointTriggerRegistry.getTriggerPromptFrom(input);
         if (prompt == null) {
-            Messaging.sendErrorTr((CommandSender) context.getForWhom(),
+            Messaging.sendErrorTr((CommandSource) context.getForWhom(),
                     Messages.WAYPOINT_TRIGGER_EDITOR_INVALID_TRIGGER, input);
             context.setSessionData("said", false);
             return this;
@@ -40,10 +36,10 @@ public class TriggerAddPrompt extends StringPrompt {
             if (editor.getCurrentWaypoint() != null) {
                 editor.getCurrentWaypoint().addTrigger(returned);
                 context.setSessionData(WaypointTriggerPrompt.CREATED_TRIGGER_KEY, null);
-                Messaging.sendTr((CommandSender) context.getForWhom(), Messages.WAYPOINT_TRIGGER_ADDED_SUCCESSFULLY,
+                Messaging.sendTr((CommandSource) context.getForWhom(), Messages.WAYPOINT_TRIGGER_ADDED_SUCCESSFULLY,
                         returned.description());
             } else {
-                Messaging.sendErrorTr((CommandSender) context.getForWhom(), Messages.WAYPOINT_TRIGGER_EDITOR_INACTIVE);
+                Messaging.sendErrorTr((CommandSource) context.getForWhom(), Messages.WAYPOINT_TRIGGER_EDITOR_INACTIVE);
             }
         }
         if (context.getSessionData("said") == Boolean.TRUE)

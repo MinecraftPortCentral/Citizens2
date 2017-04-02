@@ -16,14 +16,7 @@ import net.citizensnpcs.api.util.Messaging;
 import net.citizensnpcs.util.Messages;
 import net.citizensnpcs.util.Util;
 
-import org.bukkit.command.CommandSender;
-import org.bukkit.conversations.Conversable;
-import org.bukkit.conversations.Conversation;
-import org.bukkit.conversations.ConversationContext;
-import org.bukkit.conversations.ConversationFactory;
-import org.bukkit.conversations.NumericPrompt;
-import org.bukkit.conversations.Prompt;
-
+import org.spongepowered.api.command.CommandSource;
 import com.google.common.collect.Lists;
 
 public class NPCCommandSelector extends NumericPrompt {
@@ -44,7 +37,7 @@ public class NPCCommandSelector extends NumericPrompt {
                 break;
             }
         }
-        CommandSender sender = (CommandSender) context.getForWhom();
+        CommandSource sender = (CommandSource) context.getForWhom();
         if (!found) {
             Messaging.sendErrorTr(sender, Messages.SELECTION_PROMPT_INVALID_CHOICE, input);
             return this;

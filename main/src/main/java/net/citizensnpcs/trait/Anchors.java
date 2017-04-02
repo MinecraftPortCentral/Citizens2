@@ -3,11 +3,6 @@ package net.citizensnpcs.trait;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.world.WorldLoadEvent;
-
 import net.citizensnpcs.api.exception.NPCLoadException;
 import net.citizensnpcs.api.trait.Trait;
 import net.citizensnpcs.api.trait.TraitName;
@@ -15,6 +10,11 @@ import net.citizensnpcs.api.util.DataKey;
 import net.citizensnpcs.api.util.Messaging;
 import net.citizensnpcs.util.Anchor;
 import net.citizensnpcs.util.Messages;
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.world.LoadWorldEvent;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 @TraitName("anchors")
 public class Anchors extends Trait {
@@ -24,7 +24,7 @@ public class Anchors extends Trait {
         super("anchors");
     }
 
-    public boolean addAnchor(String name, Location location) {
+    public boolean addAnchor(String name, Location<World> location) {
         Anchor newAnchor = new Anchor(name, location);
         if (anchors.contains(newAnchor))
             return false;
@@ -32,8 +32,8 @@ public class Anchors extends Trait {
         return true;
     }
 
-    @EventHandler
-    public void checkWorld(WorldLoadEvent event) {
+    @Listener
+    public void checkWorld(LoadWorldEvent event) {
         for (Anchor anchor : anchors)
             if (!anchor.isLoaded())
                 anchor.load();
@@ -54,9 +54,9 @@ public class Anchors extends Trait {
     public void load(DataKey key) throws NPCLoadException {
         for (DataKey sub : key.getRelative("list").getIntegerSubKeys()) {
             String[] parts = sub.getString("").split(";");
-            Location location;
+            Location<World> location;
             try {
-                location = new Location(Bukkit.getServer().getWorld(parts[1]), Double.valueOf(parts[2]),
+                location = new Location<World>(Sponge.getServer().getWorld(parts[1]).get(), Double.valueOf(parts[2]),
                         Double.valueOf(parts[3]), Double.valueOf(parts[4]));
                 anchors.add(new Anchor(parts[0], location));
             } catch (NumberFormatException e) {

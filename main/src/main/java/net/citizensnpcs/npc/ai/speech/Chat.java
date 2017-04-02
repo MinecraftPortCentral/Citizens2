@@ -10,8 +10,7 @@ import net.citizensnpcs.api.ai.speech.Talkable;
 import net.citizensnpcs.api.ai.speech.VocalChord;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.util.Messaging;
-
-import org.bukkit.entity.Entity;
+import org.spongepowered.api.entity.Entity;
 
 public class Chat implements VocalChord {
     public final String VOCAL_CHORD_NAME = "chat";

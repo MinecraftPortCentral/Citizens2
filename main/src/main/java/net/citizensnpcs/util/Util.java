@@ -2,21 +2,15 @@ package net.citizensnpcs.util;
 
 import java.util.Random;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
-import org.bukkit.util.Vector;
-
+import com.flowpowered.math.vector.Vector3d;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 
 import net.citizensnpcs.api.event.NPCCollisionEvent;
 import net.citizensnpcs.api.event.NPCPushEvent;
 import net.citizensnpcs.api.npc.NPC;
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.entity.Entity;
 
 public class Util {
     // Static class for small (emphasis small) utility methods
@@ -28,15 +22,13 @@ public class Util {
     }
 
     public static void callCollisionEvent(NPC npc, Entity entity) {
-        if (NPCCollisionEvent.getHandlerList().getRegisteredListeners().length > 0) {
-            Bukkit.getPluginManager().callEvent(new NPCCollisionEvent(npc, entity));
-        }
+        Sponge.getEventManager().post(new NPCCollisionEvent(npc, entity));
     }
 
-    public static NPCPushEvent callPushEvent(NPC npc, Vector vector) {
+    public static NPCPushEvent callPushEvent(NPC npc, Vector3d vector) {
         NPCPushEvent event = new NPCPushEvent(npc, vector);
         event.setCancelled(npc.data().get(NPC.DEFAULT_PROTECTED_METADATA, true));
-        Bukkit.getPluginManager().callEvent(event);
+        Sponge.getEventManager().post(event);
         return event;
     }
 

@@ -2,15 +2,14 @@ package net.citizensnpcs.util;
 
 import net.citizensnpcs.Settings.Setting;
 import net.citizensnpcs.api.util.Colorizer;
-
-import org.bukkit.ChatColor;
+import net.minecraft.util.text.TextFormatting;
 
 public class StringHelper {
     public static String wrap(Object string) {
         return wrap(string, Colorizer.parseColors(Setting.MESSAGE_COLOUR.asString()));
     }
 
-    public static String wrap(Object string, ChatColor colour) {
+    public static String wrap(Object string, TextFormatting colour) {
         return wrap(string, colour.toString());
     }
 

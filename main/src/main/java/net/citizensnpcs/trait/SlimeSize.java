@@ -1,8 +1,7 @@
 package net.citizensnpcs.trait;
 
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Slime;
-
+import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.entity.living.monster.Slime;
 import net.citizensnpcs.api.persistence.Persist;
 import net.citizensnpcs.api.trait.Trait;
 import net.citizensnpcs.api.trait.TraitName;
@@ -19,7 +18,7 @@ public class SlimeSize extends Trait {
         super("slimesize");
     }
 
-    public void describe(CommandSender sender) {
+    public void describe(CommandSource sender) {
         Messaging.sendTr(sender, Messages.SIZE_DESCRIPTION, npc.getName(), size);
     }
 

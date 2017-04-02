@@ -2,12 +2,7 @@ package net.citizensnpcs.trait.text;
 
 import net.citizensnpcs.api.util.Messaging;
 import net.citizensnpcs.util.Messages;
-
-import org.bukkit.ChatColor;
-import org.bukkit.conversations.ConversationContext;
-import org.bukkit.conversations.Prompt;
-import org.bukkit.conversations.StringPrompt;
-import org.bukkit.entity.Player;
+import net.minecraft.util.text.TextFormatting;
 
 public class TextAddPrompt extends StringPrompt {
     private final Text text;
@@ -25,6 +20,6 @@ public class TextAddPrompt extends StringPrompt {
 
     @Override
     public String getPromptText(ConversationContext context) {
-        return ChatColor.GREEN + Messaging.tr(Messages.TEXT_EDITOR_ADD_PROMPT);
+        return TextFormatting.GREEN + Messaging.tr(Messages.TEXT_EDITOR_ADD_PROMPT);
     }
 }

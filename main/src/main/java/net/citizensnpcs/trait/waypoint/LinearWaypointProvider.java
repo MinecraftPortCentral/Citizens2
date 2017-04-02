@@ -5,20 +5,6 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.command.CommandSender;
-import org.bukkit.conversations.Conversation;
-import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerItemHeldEvent;
-import org.bukkit.inventory.EquipmentSlot;
-
 import com.google.common.collect.Lists;
 
 import net.citizensnpcs.api.CitizensAPI;
@@ -40,6 +26,15 @@ import net.citizensnpcs.trait.waypoint.WaypointProvider.EnumerableWaypointProvid
 import net.citizensnpcs.trait.waypoint.triggers.TriggerEditPrompt;
 import net.citizensnpcs.util.Messages;
 import net.citizensnpcs.util.Util;
+import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.block.InteractBlockEvent;
+import org.spongepowered.api.event.entity.InteractEntityEvent;
+import org.spongepowered.api.event.filter.IsCancelled;
+import org.spongepowered.api.util.Tristate;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 public class LinearWaypointProvider implements EnumerableWaypointProvider {
     private LinearWaypointGoal currentGoal;
@@ -47,7 +42,7 @@ public class LinearWaypointProvider implements EnumerableWaypointProvider {
     private final List<Waypoint> waypoints = Lists.newArrayList();
 
     @Override
-    public WaypointEditor createEditor(CommandSender sender, CommandContext args) {
+    public WaypointEditor createEditor(CommandSource sender, CommandContext args) {
         if (args.hasFlag('h')) {
             try {
                 if (args.getSenderLocation() != null) {
@@ -59,7 +54,7 @@ public class LinearWaypointProvider implements EnumerableWaypointProvider {
             return null;
         } else if (args.hasValueFlag("at")) {
             try {
-                Location location = CommandContext.parseLocation(args.getSenderLocation(), args.getFlag("at"));
+                Location<World> location = CommandContext.parseLocation(args.getSenderLocation(), args.getFlag("at"));
                 if (location != null) {
                     waypoints.add(new Waypoint(location));
                 }
@@ -187,7 +182,7 @@ public class LinearWaypointProvider implements EnumerableWaypointProvider {
             markers.destroyWaypointMarkers();
         }
 
-        private String formatLoc(Location location) {
+        private String formatLoc(Location<World> location) {
             return String.format("[[%d]], [[%d]], [[%d]]", location.getBlockX(), location.getBlockY(),
                     location.getBlockZ());
         }
@@ -201,7 +196,7 @@ public class LinearWaypointProvider implements EnumerableWaypointProvider {
             return waypoints.get(editingSlot);
         }
 
-        private Location getPreviousWaypoint(int fromSlot) {
+        private Location<World> getPreviousWaypoint(int fromSlot) {
             if (waypoints.size() <= 1)
                 return null;
             if (--fromSlot < 0)
@@ -213,21 +208,21 @@ public class LinearWaypointProvider implements EnumerableWaypointProvider {
             editingSlot = Math.max(0, Math.min(waypoints.size() - 1, editingSlot));
         }
 
-        @EventHandler
+        @Listener
         public void onNPCDespawn(NPCDespawnEvent event) {
             if (event.getNPC().equals(npc)) {
                 Editor.leave(player);
             }
         }
 
-        @EventHandler
+        @Listener
         public void onNPCRemove(NPCRemoveEvent event) {
             if (event.getNPC().equals(npc)) {
                 Editor.leave(player);
             }
         }
 
-        @EventHandler(ignoreCancelled = true)
+        @Listener(ignoreCancelled = true)
         public void onPlayerChat(AsyncPlayerChatEvent event) {
             if (!event.getPlayer().equals(player))
                 return;
@@ -260,8 +255,8 @@ public class LinearWaypointProvider implements EnumerableWaypointProvider {
             }
         }
 
-        @EventHandler(ignoreCancelled = true)
-        public void onPlayerInteract(PlayerInteractEvent event) {
+        @Listener
+        public void onPlayerInteract(InteractBlockEvent event) {
             if (!event.getPlayer().equals(player) || event.getAction() == Action.PHYSICAL || !npc.isSpawned()
                     || event.getPlayer().getWorld() != npc.getEntity().getWorld()
                     || event.getHand() == EquipmentSlot.OFF_HAND)
@@ -306,8 +301,9 @@ public class LinearWaypointProvider implements EnumerableWaypointProvider {
             onWaypointsModified();
         }
 
-        @EventHandler(ignoreCancelled = true)
-        public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
+        @IsCancelled(Tristate.UNDEFINED)
+        @Listener
+        public void onPlayerInteractEntity(InteractEntityEvent event) {
             if (!player.equals(event.getPlayer()) || !showPath || event.getHand() == EquipmentSlot.OFF_HAND)
                 return;
             if (!event.getRightClicked().hasMetadata("waypointindex"))
@@ -317,7 +313,7 @@ public class LinearWaypointProvider implements EnumerableWaypointProvider {
                     formatLoc(waypoints.get(editingSlot).getLocation()));
         }
 
-        @EventHandler
+        @Listener
         public void onPlayerItemHeldChange(PlayerItemHeldEvent event) {
             if (!event.getPlayer().equals(player) || waypoints.size() == 0)
                 return;
@@ -359,7 +355,7 @@ public class LinearWaypointProvider implements EnumerableWaypointProvider {
     }
 
     private class LinearWaypointGoal implements Goal {
-        private final Location cachedLocation = new Location(null, 0, 0, 0);
+        private final Location<World> cachedLocation = new Location<World>(null, 0, 0, 0);
         private Waypoint currentDestination;
         private Iterator<Waypoint> itr;
         private boolean paused;
@@ -454,7 +450,7 @@ public class LinearWaypointProvider implements EnumerableWaypointProvider {
             }
             this.selector = selector;
             Waypoint next = itr.next();
-            Location npcLoc = npc.getEntity().getLocation(cachedLocation);
+            Location<World> npcLoc = npc.getEntity().getLocation();
             if (npcLoc.getWorld() != next.getLocation().getWorld() || npcLoc.distanceSquared(next.getLocation()) < npc
                     .getNavigator().getLocalParameters().distanceMargin()) {
                 return false;

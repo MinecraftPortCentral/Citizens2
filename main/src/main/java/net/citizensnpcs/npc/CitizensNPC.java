@@ -4,20 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.UUID;
 
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.block.Block;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
-import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
-import org.bukkit.metadata.FixedMetadataValue;
-import org.bukkit.scoreboard.Team;
-import org.bukkit.scoreboard.Team.Option;
-import org.bukkit.scoreboard.Team.OptionStatus;
-
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 
@@ -44,6 +30,13 @@ import net.citizensnpcs.trait.CurrentLocation;
 import net.citizensnpcs.util.Messages;
 import net.citizensnpcs.util.NMS;
 import net.citizensnpcs.util.Util;
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.entity.EntityType;
+import org.spongepowered.api.entity.living.Living;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 public class CitizensNPC extends AbstractNPC {
     private EntityController entityController;
@@ -61,7 +54,7 @@ public class CitizensNPC extends AbstractNPC {
         if (!isSpawned() && reason != DespawnReason.DEATH) {
             Messaging.debug("Tried to despawn", getId(), "while already despawned.");
             if (reason == DespawnReason.REMOVAL) {
-                Bukkit.getPluginManager().callEvent(new NPCDespawnEvent(this, reason));
+                Sponge.getEventManager().post(new NPCDespawnEvent(this, reason));
             }
             if (reason == DespawnReason.RELOAD) {
                 unloadEvents();
@@ -72,7 +65,7 @@ public class CitizensNPC extends AbstractNPC {
         if (reason == DespawnReason.CHUNK_UNLOAD) {
             event.setCancelled(Setting.KEEP_CHUNKS_LOADED.asBoolean());
         }
-        Bukkit.getPluginManager().callEvent(event);
+        Sponge.getEventManager().post(event);
         if (event.isCancelled()) {
             getEntity().getLocation().getChunk();
             Messaging.debug("Couldn't despawn", getId(), "due to despawn event cancellation. Force loaded chunk.",
@@ -97,7 +90,7 @@ public class CitizensNPC extends AbstractNPC {
     }
 
     @Override
-    public void faceLocation(Location location) {
+    public void faceLocation(Location<World> location) {
         if (!isSpawned())
             return;
         Util.faceLocation(getEntity(), location);
@@ -119,7 +112,7 @@ public class CitizensNPC extends AbstractNPC {
     }
 
     @Override
-    public Location getStoredLocation() {
+    public Location<World> getStoredLocation() {
         return isSpawned() ? getEntity().getLocation() : getTrait(CurrentLocation.class).getLocation();
     }
 
@@ -164,7 +157,7 @@ public class CitizensNPC extends AbstractNPC {
     public void setEntityController(EntityController newController) {
         Preconditions.checkNotNull(newController);
         boolean wasSpawned = isSpawned();
-        Location prev = null;
+        Location<World> prev = null;
         if (wasSpawned) {
             prev = getEntity().getLocation();
             despawn(DespawnReason.PENDING_RESPAWN);
@@ -190,7 +183,7 @@ public class CitizensNPC extends AbstractNPC {
         }
         data().get(NPC.DEFAULT_PROTECTED_METADATA, true);
 
-        at = at.clone();
+        at = at.copy();
         getTrait(CurrentLocation.class).setLocation(at);
         entityController.spawn(at, this);
 
@@ -213,7 +206,7 @@ public class CitizensNPC extends AbstractNPC {
                     Util.isLoaded(at) ? "Util.isLoaded true" : "Util.isLoaded false");
             // we need to wait for a chunk load before trying to spawn
             entityController.remove();
-            Bukkit.getPluginManager().callEvent(new NPCNeedsRespawnEvent(this, at));
+            Sponge.getEventManager().post(new NPCNeedsRespawnEvent(this, at));
             return false;
         }
 
@@ -224,7 +217,7 @@ public class CitizensNPC extends AbstractNPC {
         getTrait(Spawned.class).setSpawned(true);
 
         NPCSpawnEvent spawnEvent = new NPCSpawnEvent(this, at);
-        Bukkit.getPluginManager().callEvent(spawnEvent);
+        Sponge.getEventManager().post(spawnEvent);
 
         if (spawnEvent.isCancelled()) {
             entityController.remove();
@@ -247,8 +240,8 @@ public class CitizensNPC extends AbstractNPC {
             }
         }
 
-        if (getEntity() instanceof LivingEntity) {
-            LivingEntity entity = (LivingEntity) getEntity();
+        if (getEntity() instanceof Living) {
+            Living entity = (Living) getEntity();
             entity.setRemoveWhenFarAway(false);
 
             if (NMS.getStepHeight(entity) < 1) {
@@ -276,7 +269,7 @@ public class CitizensNPC extends AbstractNPC {
             getEntity().setGlowing(data().get(NPC.GLOWING_METADATA, false));
             if (!getNavigator().isNavigating() && updateCounter++ > Setting.PACKET_UPDATE_DELAY.asInt()) {
                 updateCounter = 0;
-                if (getEntity() instanceof LivingEntity) {
+                if (getEntity() instanceof Livingy) {
                     OptionStatus nameVisibility = OptionStatus.NEVER;
                     if (!getEntity().isCustomNameVisible()
                             && !data().<Object> get(NPC.NAMEPLATE_VISIBLE_METADATA, true).toString().equals("hover")) {
@@ -310,17 +303,17 @@ public class CitizensNPC extends AbstractNPC {
                 NMS.sendPositionUpdate(player, getEntity(), getStoredLocation());
             }
 
-            if (getEntity() instanceof LivingEntity) {
+            if (getEntity() instanceof Living) {
                 String nameplateVisible = data().<Object> get(NPC.NAMEPLATE_VISIBLE_METADATA, true).toString();
                 if (nameplateVisible.equals("hover")) {
-                    ((LivingEntity) getEntity()).setCustomNameVisible(false);
+                    ((Living) getEntity()).setCustomNameVisible(false);
                 } else {
-                    ((LivingEntity) getEntity()).setCustomNameVisible(Boolean.parseBoolean(nameplateVisible));
+                    ((Living) getEntity()).setCustomNameVisible(Boolean.parseBoolean(nameplateVisible));
                 }
                 if (data().get(NPC.DEFAULT_PROTECTED_METADATA, true)) {
-                    NMS.setKnockbackResistance((LivingEntity) getEntity(), 1D);
+                    NMS.setKnockbackResistance((Living) getEntity(), 1D);
                 } else {
-                    NMS.setKnockbackResistance((LivingEntity) getEntity(), 0D);
+                    NMS.setKnockbackResistance((Living) getEntity(), 0D);
                 }
             }
 

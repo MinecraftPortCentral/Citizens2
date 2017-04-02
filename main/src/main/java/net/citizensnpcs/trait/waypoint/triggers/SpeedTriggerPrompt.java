@@ -3,10 +3,6 @@ package net.citizensnpcs.trait.waypoint.triggers;
 import net.citizensnpcs.api.util.Messaging;
 import net.citizensnpcs.util.Messages;
 
-import org.bukkit.conversations.ConversationContext;
-import org.bukkit.conversations.NumericPrompt;
-import org.bukkit.conversations.Prompt;
-
 public class SpeedTriggerPrompt extends NumericPrompt implements WaypointTriggerPrompt {
     @Override
     protected Prompt acceptValidatedInput(ConversationContext context, Number input) {

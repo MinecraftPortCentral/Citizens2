@@ -3,17 +3,7 @@ package net.citizensnpcs.npc.ai;
 import java.util.Iterator;
 import java.util.ListIterator;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
-import org.bukkit.block.BlockState;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.material.Door;
-import org.bukkit.util.Vector;
-
+import com.flowpowered.math.vector.Vector3d;
 import com.google.common.collect.Iterables;
 
 import net.citizensnpcs.Settings.Setting;
@@ -32,7 +22,6 @@ import net.citizensnpcs.api.ai.event.NavigationReplaceEvent;
 import net.citizensnpcs.api.ai.event.NavigationStuckEvent;
 import net.citizensnpcs.api.ai.event.NavigatorCallback;
 import net.citizensnpcs.api.astar.pathfinder.BlockExaminer;
-import net.citizensnpcs.api.astar.pathfinder.BlockSource;
 import net.citizensnpcs.api.astar.pathfinder.MinecraftBlockExaminer;
 import net.citizensnpcs.api.astar.pathfinder.PathPoint;
 import net.citizensnpcs.api.astar.pathfinder.PathPoint.PathCallback;
@@ -40,6 +29,13 @@ import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.util.DataKey;
 import net.citizensnpcs.util.NMS;
 import net.citizensnpcs.util.Util;
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.block.BlockState;
+import org.spongepowered.api.block.BlockType;
+import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.util.Direction;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 public class CitizensNavigator implements Navigator, Runnable {
     private final NavigatorParameters defaultParams = new NavigatorParameters().baseSpeed(UNINITIALISED_SPEED)
@@ -167,7 +163,7 @@ public class CitizensNavigator implements Navigator, Runnable {
             Entity entity = npc.getEntity().getPassenger();
             Location npcLoc = npc.getEntity().getLocation();
             while (entity != null) {
-                Location loc = entity.getLocation(STATIONARY_LOCATION);
+                Location loc = entity.getLocation();
                 loc.setYaw(npcLoc.getYaw());
                 entity.teleport(loc);
                 entity = entity.getPassenger();
@@ -181,7 +177,7 @@ public class CitizensNavigator implements Navigator, Runnable {
         } else {
             NavigationCompleteEvent event = new NavigationCompleteEvent(this);
             PathStrategy old = executing;
-            Bukkit.getPluginManager().callEvent(event);
+            Sponge.getEventManager().post(event);
             if (old == executing) {
                 stopNavigating(null);
             }
@@ -234,7 +230,7 @@ public class CitizensNavigator implements Navigator, Runnable {
     }
 
     @Override
-    public void setTarget(Iterable<Vector> path) {
+    public void setTarget(Iterable<Vector3d> path) {
         if (!npc.isSpawned())
             throw new IllegalStateException("npc is not spawned");
         if (path == null || Iterables.size(path) == 0) {
@@ -283,7 +279,7 @@ public class CitizensNavigator implements Navigator, Runnable {
         localParams = defaultParams;
         stationaryTicks = 0;
         if (npc.isSpawned()) {
-            Vector velocity = npc.getEntity().getVelocity();
+            Vector3d velocity = npc.getEntity().getVelocity();
             velocity.setX(0).setY(0).setZ(0);
             npc.getEntity().setVelocity(velocity);
         }
@@ -304,7 +300,7 @@ public class CitizensNavigator implements Navigator, Runnable {
         if (reason == CancelReason.STUCK) {
             StuckAction action = localParams.stuckAction();
             NavigationStuckEvent event = new NavigationStuckEvent(this, action);
-            Bukkit.getPluginManager().callEvent(event);
+            Sponge.getEventManager().post(event);
             action = event.getAction();
             boolean shouldContinue = action != null ? action.run(npc, this) : false;
             if (shouldContinue) {
@@ -315,7 +311,7 @@ public class CitizensNavigator implements Navigator, Runnable {
         }
         NavigationCancelEvent event = new NavigationCancelEvent(this, reason);
         PathStrategy old = executing;
-        Bukkit.getPluginManager().callEvent(event);
+        Sponge.getEventManager().post(event);
         if (old == executing) {
             stopNavigating();
         }
@@ -327,14 +323,14 @@ public class CitizensNavigator implements Navigator, Runnable {
 
     private void switchStrategyTo(PathStrategy newStrategy) {
         if (executing != null) {
-            Bukkit.getPluginManager().callEvent(new NavigationReplaceEvent(this));
+            Sponge.getEventManager().post(new NavigationReplaceEvent(this));
         }
         executing = newStrategy;
         stationaryTicks = 0;
         if (npc.isSpawned()) {
             NMS.updateNavigationWorld(npc.getEntity(), npc.getEntity().getWorld());
         }
-        Bukkit.getPluginManager().callEvent(new NavigationBeginEvent(this));
+        Sponge.getEventManager().post(new NavigationBeginEvent(this));
     }
 
     private void updateMountedStatus() {
@@ -365,7 +361,7 @@ public class CitizensNavigator implements Navigator, Runnable {
     private boolean updateStationaryStatus() {
         if (localParams.stationaryTicks() < 0)
             return false;
-        Location current = npc.getEntity().getLocation(STATIONARY_LOCATION);
+        Location<World> current = npc.getEntity().getLocation();
         if (current.getY() < -5) {
             stopNavigating(CancelReason.STUCK);
             return true;
@@ -385,13 +381,13 @@ public class CitizensNavigator implements Navigator, Runnable {
 
     public static class DoorExaminer implements BlockExaminer {
         @Override
-        public float getCost(BlockSource source, PathPoint point) {
+        public float getCost(Location<World> source, PathPoint point) {
             return 0F;
         }
 
         @Override
-        public PassableState isPassable(BlockSource source, PathPoint point) {
-            Material in = source.getMaterialAt(point.getVector());
+        public PassableState isPassable(Location<World> source, PathPoint point) {
+            BlockType in = source.getMaterialAt(point.getVector());
             if (MinecraftBlockExaminer.isDoor(in)) {
                 point.addCallback(new DoorOpener());
                 return PassableState.PASSABLE;
@@ -402,12 +398,12 @@ public class CitizensNavigator implements Navigator, Runnable {
 
     private static class DoorOpener implements PathCallback {
         @Override
-        public void run(NPC npc, Block point, ListIterator<Block> path) {
-            BlockState state = point.getState();
+        public void run(NPC npc, Location<World> point, ListIterator<Location<World>> path) {
+            BlockState state = point.getBlock();
             Door door = (Door) state.getData();
-            if (npc.getStoredLocation().distance(point.getLocation()) < 2) {
+            if (npc.getStoredLocation().getPosition().distance(point.getPosition()) < 2) {
                 boolean bottom = !door.isTopHalf();
-                Block set = bottom ? point : point.getRelative(BlockFace.DOWN);
+                Location<World> set = bottom ? point : point.getRelative(Direction.DOWN);
                 state = set.getState();
                 door = (Door) state.getData();
                 door.setOpen(true);
@@ -416,8 +412,6 @@ public class CitizensNavigator implements Navigator, Runnable {
             }
         }
     }
-
-    private static final Location STATIONARY_LOCATION = new Location(null, 0, 0, 0);
 
     private static int UNINITIALISED_SPEED = Integer.MIN_VALUE;
 }

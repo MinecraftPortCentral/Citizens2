@@ -3,20 +3,6 @@ package net.citizensnpcs.trait.waypoint;
 import java.util.Iterator;
 import java.util.List;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.inventory.EquipmentSlot;
-import org.bukkit.metadata.FixedMetadataValue;
-import org.bukkit.util.Vector;
-
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -43,6 +29,8 @@ import net.citizensnpcs.api.util.prtree.SimplePointND;
 import net.citizensnpcs.trait.waypoint.WaypointProvider.EnumerableWaypointProvider;
 import net.citizensnpcs.util.Messages;
 import net.citizensnpcs.util.Util;
+import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.entity.living.player.Player;
 
 public class GuidedWaypointProvider implements EnumerableWaypointProvider {
     private final List<Waypoint> available = Lists.newArrayList();
@@ -53,7 +41,7 @@ public class GuidedWaypointProvider implements EnumerableWaypointProvider {
     private PRTree<Region3D<Waypoint>> tree = PRTree.create(new Region3D.Converter<Waypoint>(), 30);
 
     @Override
-    public WaypointEditor createEditor(final CommandSender sender, CommandContext args) {
+    public WaypointEditor createEditor(final CommandSource sender, CommandContext args) {
         if (!(sender instanceof Player)) {
             Messaging.sendErrorTr(sender, Messages.COMMAND_MUST_BE_INGAME);
             return null;

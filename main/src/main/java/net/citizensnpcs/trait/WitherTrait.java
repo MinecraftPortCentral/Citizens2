@@ -1,11 +1,10 @@
 package net.citizensnpcs.trait;
 
-import org.bukkit.entity.Wither;
-
 import net.citizensnpcs.api.persistence.Persist;
 import net.citizensnpcs.api.trait.Trait;
 import net.citizensnpcs.api.trait.TraitName;
 import net.citizensnpcs.util.NMS;
+import org.spongepowered.api.entity.living.monster.Wither;
 
 @TraitName("withertrait")
 public class WitherTrait extends Trait {

@@ -9,9 +9,8 @@ import net.citizensnpcs.editor.Editor;
 import net.citizensnpcs.editor.EquipmentEditor;
 import net.citizensnpcs.trait.text.Text;
 import net.citizensnpcs.trait.waypoint.Waypoints;
-
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
+import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.entity.living.player.Player;
 
 @Requirements(selected = true, ownership = true)
 public class EditorCommands {
@@ -49,7 +48,7 @@ public class EditorCommands {
             flags = "*",
             permission = "citizens.npc.edit.path")
     @Requirements(selected = true, ownership = true)
-    public void path(CommandContext args, CommandSender player, NPC npc) {
+    public void path(CommandContext args, CommandSource player, NPC npc) {
         Editor editor = npc.getTrait(Waypoints.class).getEditor(player, args);
         if (editor == null)
             return;

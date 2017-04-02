@@ -4,22 +4,19 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.bukkit.entity.Player;
-import org.bukkit.event.HandlerList;
-import org.bukkit.event.Listener;
-
 import net.citizensnpcs.api.util.Messaging;
 import net.citizensnpcs.util.Messages;
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.entity.living.player.Player;
 
-public abstract class Editor implements Listener {
+public abstract class Editor {
     public abstract void begin();
 
     public abstract void end();
 
     private static void enter(Player player, Editor editor) {
         editor.begin();
-        player.getServer().getPluginManager().registerEvents(editor,
-                player.getServer().getPluginManager().getPlugin("Citizens"));
+        Sponge.getEventManager().registerListeners(Sponge.getPluginManager().getPlugin("Citizens"), editor);
         EDITING.put(player.getName(), editor);
     }
 
@@ -44,14 +41,12 @@ public abstract class Editor implements Listener {
         if (!hasEditor(player))
             return;
         Editor editor = EDITING.remove(player.getName());
-        HandlerList.unregisterAll(editor);
         editor.end();
     }
 
     public static void leaveAll() {
         for (Entry<String, Editor> entry : EDITING.entrySet()) {
             entry.getValue().end();
-            HandlerList.unregisterAll(entry.getValue());
         }
         EDITING.clear();
     }

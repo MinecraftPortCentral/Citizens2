@@ -1,18 +1,18 @@
 package net.citizensnpcs.trait;
 
-import org.bukkit.DyeColor;
-import org.bukkit.entity.Wolf;
-
 import net.citizensnpcs.api.persistence.Persist;
 import net.citizensnpcs.api.trait.Trait;
 import net.citizensnpcs.api.trait.TraitName;
+import org.spongepowered.api.data.type.DyeColor;
+import org.spongepowered.api.data.type.DyeColors;
+import org.spongepowered.api.entity.living.animal.Wolf;
 
 @TraitName("wolfmodifiers")
 public class WolfModifiers extends Trait {
     @Persist("angry")
     private boolean angry;
     @Persist("collarColor")
-    private DyeColor collarColor = DyeColor.RED;
+    private DyeColor collarColor = DyeColors.RED;
     @Persist("sitting")
     private boolean sitting;
     @Persist("tamed")

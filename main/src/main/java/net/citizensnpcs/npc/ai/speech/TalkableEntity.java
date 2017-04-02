@@ -8,10 +8,9 @@ import net.citizensnpcs.api.ai.speech.event.SpeechBystanderEvent;
 import net.citizensnpcs.api.ai.speech.event.SpeechTargetedEvent;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.util.Messaging;
-
-import org.bukkit.Bukkit;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.entity.living.player.Player;
 
 public class TalkableEntity implements Talkable {
     Entity entity;
@@ -74,7 +73,7 @@ public class TalkableEntity implements Talkable {
     @Override
     public void talkNear(SpeechContext context, String text, VocalChord vocalChord) {
         SpeechBystanderEvent event = new SpeechBystanderEvent(this, context, text, vocalChord);
-        Bukkit.getServer().getPluginManager().callEvent(event);
+        Sponge.getEventManager().post(event);
         if (event.isCancelled())
             return;
         talk(event.getMessage());
@@ -83,7 +82,7 @@ public class TalkableEntity implements Talkable {
     @Override
     public void talkTo(SpeechContext context, String text, VocalChord vocalChord) {
         SpeechTargetedEvent event = new SpeechTargetedEvent(this, context, text, vocalChord);
-        Bukkit.getServer().getPluginManager().callEvent(event);
+        Sponge.getEventManager().post(event);
         if (event.isCancelled())
             return;
         talk(event.getMessage());

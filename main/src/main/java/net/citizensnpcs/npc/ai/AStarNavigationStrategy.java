@@ -2,10 +2,7 @@ package net.citizensnpcs.npc.ai;
 
 import java.util.List;
 
-import org.bukkit.Effect;
-import org.bukkit.Location;
-import org.bukkit.util.Vector;
-
+import com.flowpowered.math.vector.Vector3d;
 import com.google.common.collect.Lists;
 
 import net.citizensnpcs.api.ai.AbstractPathStrategy;
@@ -19,20 +16,22 @@ import net.citizensnpcs.api.astar.pathfinder.VectorGoal;
 import net.citizensnpcs.api.astar.pathfinder.VectorNode;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.util.NMS;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 public class AStarNavigationStrategy extends AbstractPathStrategy {
-    private final Location destination;
+    private final Location<World> destination;
     private final NPC npc;
     private final NavigatorParameters params;
     private Path plan;
     private boolean planned = false;
-    private Vector vector;
+    private Vector3d vector;
 
-    public AStarNavigationStrategy(NPC npc, Iterable<Vector> path, NavigatorParameters params) {
+    public AStarNavigationStrategy(NPC npc, Iterable<Vector3d> path, NavigatorParameters params) {
         super(TargetType.LOCATION);
-        List<Vector> list = Lists.newArrayList(path);
+        List<Vector3d> list = Lists.newArrayList(path);
         this.params = params;
-        this.destination = list.get(list.size() - 1).toLocation(npc.getStoredLocation().getWorld());
+        this.destination = list.get(list.size() - 1).toLocation(npc.getStoredLocation().getExtent());
         this.npc = npc;
         setPlan(new Path(list));
     }
@@ -45,7 +44,7 @@ public class AStarNavigationStrategy extends AbstractPathStrategy {
     }
 
     @Override
-    public Iterable<Vector> getPath() {
+    public Iterable<Vector3d> getPath() {
         return plan == null ? null : plan.getPath();
     }
 
@@ -87,7 +86,7 @@ public class AStarNavigationStrategy extends AbstractPathStrategy {
         if (getCancelReason() != null || plan == null || plan.isComplete()) {
             return true;
         }
-        Location currLoc = npc.getEntity().getLocation(NPC_LOCATION);
+        Location currLoc = npc.getEntity().getLocation();
         if (currLoc.toVector().distanceSquared(vector) <= params.distanceMargin()) {
             plan.update(npc);
             if (plan.isComplete()) {
@@ -95,8 +94,8 @@ public class AStarNavigationStrategy extends AbstractPathStrategy {
             }
             vector = plan.getCurrentVector();
         }
-        double dX = vector.getBlockX() - currLoc.getX();
-        double dZ = vector.getBlockZ() - currLoc.getZ();
+        double dX = vector.getX() - currLoc.getX();
+        double dZ = vector.getZ() - currLoc.getZ();
         double dY = vector.getY() - currLoc.getY();
         double xzDistance = dX * dX + dZ * dZ;
         double distance = xzDistance + dY * dY;
@@ -115,5 +114,5 @@ public class AStarNavigationStrategy extends AbstractPathStrategy {
     }
 
     private static final AStarMachine<VectorNode, Path> ASTAR = AStarMachine.createWithDefaultStorage();
-    private static final Location NPC_LOCATION = new Location(null, 0, 0, 0);
+    private static final Location<World> NPC_LOCATION = new Location<World>(null, 0, 0, 0);
 }

@@ -2,8 +2,6 @@ package net.citizensnpcs.trait.waypoint.triggers;
 
 import java.util.Map;
 
-import org.bukkit.conversations.Prompt;
-
 import com.google.common.base.Joiner;
 import com.google.common.collect.Maps;
 

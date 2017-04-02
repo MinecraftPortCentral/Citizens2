@@ -1,10 +1,6 @@
 package net.citizensnpcs.npc.ai;
 
-import org.bukkit.Location;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.util.Vector;
-
+import com.flowpowered.math.vector.Vector3d;
 import net.citizensnpcs.api.ai.AttackStrategy;
 import net.citizensnpcs.api.ai.EntityTarget;
 import net.citizensnpcs.api.ai.NavigatorParameters;
@@ -14,6 +10,10 @@ import net.citizensnpcs.api.ai.event.CancelReason;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.util.BoundingBox;
 import net.citizensnpcs.util.NMS;
+import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.entity.living.Living;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 public class MCTargetStrategy implements PathStrategy, EntityTarget {
     private final boolean aggro;
@@ -26,7 +26,7 @@ public class MCTargetStrategy implements PathStrategy, EntityTarget {
     private final TargetNavigator targetNavigator;
     private int updateCounter = -1;
 
-    public MCTargetStrategy(NPC npc, org.bukkit.entity.Entity target, boolean aggro, NavigatorParameters params) {
+    public MCTargetStrategy(NPC npc, Entity target, boolean aggro, NavigatorParameters params) {
         this.npc = npc;
         this.parameters = params;
         this.handle = npc.getEntity();
@@ -52,7 +52,7 @@ public class MCTargetStrategy implements PathStrategy, EntityTarget {
     }
 
     private double distanceSquared() {
-        return handle.getLocation(HANDLE_LOCATION).distanceSquared(target.getLocation(TARGET_LOCATION));
+        return handle.getLocation().getPosition().distanceSquared(target.getLocation().getPosition());
     }
 
     @Override
@@ -61,17 +61,17 @@ public class MCTargetStrategy implements PathStrategy, EntityTarget {
     }
 
     @Override
-    public Iterable<Vector> getPath() {
+    public Iterable<Vector3d> getPath() {
         return targetNavigator.getPath();
     }
 
     @Override
-    public org.bukkit.entity.Entity getTarget() {
+    public Entity getTarget() {
         return target;
     }
 
     @Override
-    public Location getTargetAsLocation() {
+    public Location<World> getTargetAsLocation() {
         return getTarget().getLocation();
     }
 
@@ -81,7 +81,7 @@ public class MCTargetStrategy implements PathStrategy, EntityTarget {
     }
 
     private boolean hasLineOfSight() {
-        return ((LivingEntity) handle).hasLineOfSight(target);
+        return ((Living) handle).hasLineOfSight(target);
     }
 
     @Override
@@ -124,9 +124,9 @@ public class MCTargetStrategy implements PathStrategy, EntityTarget {
         NMS.look(handle, target);
         if (aggro && canAttack()) {
             AttackStrategy strategy = parameters.attackStrategy();
-            if (strategy != null && strategy.handle((LivingEntity) handle, (LivingEntity) getTarget())) {
+            if (strategy != null && strategy.handle((Living) handle, (Living) getTarget())) {
             } else if (strategy != parameters.defaultAttackStrategy()) {
-                parameters.defaultAttackStrategy().handle((LivingEntity) handle, (LivingEntity) getTarget());
+                parameters.defaultAttackStrategy().handle((Living) handle, (Living) getTarget());
             }
             attackTicks = parameters.attackDelayTicks();
         }
@@ -142,7 +142,7 @@ public class MCTargetStrategy implements PathStrategy, EntityTarget {
         private PathStrategy strategy;
 
         @Override
-        public Iterable<Vector> getPath() {
+        public Iterable<Vector3d> getPath() {
             return strategy.getPath();
         }
 
@@ -162,7 +162,7 @@ public class MCTargetStrategy implements PathStrategy, EntityTarget {
         }
 
         private void setStrategy() {
-            Location location = parameters.entityTargetLocationMapper().apply(target);
+            Location<World> location = parameters.entityTargetLocationMapper().apply(target);
             if (location == null) {
                 throw new IllegalStateException("mapper should not return null");
             }
@@ -184,7 +184,7 @@ public class MCTargetStrategy implements PathStrategy, EntityTarget {
     }
 
     public static interface TargetNavigator {
-        Iterable<Vector> getPath();
+        Iterable<Vector3d> getPath();
 
         void setPath();
 
@@ -195,12 +195,12 @@ public class MCTargetStrategy implements PathStrategy, EntityTarget {
 
     static final AttackStrategy DEFAULT_ATTACK_STRATEGY = new AttackStrategy() {
         @Override
-        public boolean handle(LivingEntity attacker, LivingEntity bukkitTarget) {
+        public boolean handle(Living attacker, Living bukkitTarget) {
             NMS.attack(attacker, bukkitTarget);
             return false;
         }
     };
-    private static final Location HANDLE_LOCATION = new Location(null, 0, 0, 0);
+    private static final Location<World> HANDLE_LOCATION = new Location<World>(null, 0, 0, 0);
 
-    private static final Location TARGET_LOCATION = new Location(null, 0, 0, 0);
+    private static final Location<World> TARGET_LOCATION = new Location<World>(null, 0, 0, 0);
 }

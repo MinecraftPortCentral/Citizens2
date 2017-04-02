@@ -5,8 +5,6 @@ import java.util.Deque;
 
 import javax.annotation.Nullable;
 
-import org.bukkit.Bukkit;
-
 import com.google.common.base.Preconditions;
 import com.mojang.authlib.GameProfile;
 

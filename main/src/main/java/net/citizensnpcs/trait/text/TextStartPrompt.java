@@ -3,12 +3,7 @@ package net.citizensnpcs.trait.text;
 import net.citizensnpcs.Settings.Setting;
 import net.citizensnpcs.api.util.Messaging;
 import net.citizensnpcs.util.Messages;
-
-import org.bukkit.ChatColor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.conversations.ConversationContext;
-import org.bukkit.conversations.Prompt;
-import org.bukkit.conversations.StringPrompt;
+import org.spongepowered.api.command.CommandSource;
 
 public class TextStartPrompt extends StringPrompt {
     private final Text text;
@@ -21,7 +16,7 @@ public class TextStartPrompt extends StringPrompt {
     public Prompt acceptInput(ConversationContext context, String original) {
         String[] parts = ChatColor.stripColor(original.trim()).split(" ");
         String input = parts[0];
-        CommandSender sender = (CommandSender) context.getForWhom();
+        CommandSource sender = (CommandSource) context.getForWhom();
         if (input.equalsIgnoreCase("add"))
             return new TextAddPrompt(text);
         else if (input.equalsIgnoreCase("edit"))

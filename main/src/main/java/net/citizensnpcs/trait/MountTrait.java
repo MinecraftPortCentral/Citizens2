@@ -2,8 +2,6 @@ package net.citizensnpcs.trait;
 
 import java.util.UUID;
 
-import org.bukkit.entity.Entity;
-
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.persistence.Persist;
@@ -11,6 +9,7 @@ import net.citizensnpcs.api.trait.Trait;
 import net.citizensnpcs.api.trait.TraitName;
 import net.citizensnpcs.npc.ai.NPCHolder;
 import net.citizensnpcs.util.NMS;
+import org.spongepowered.api.entity.Entity;
 
 @TraitName("mounttrait")
 public class MountTrait extends Trait {

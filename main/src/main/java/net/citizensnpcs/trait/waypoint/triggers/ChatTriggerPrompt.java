@@ -4,12 +4,7 @@ import java.util.List;
 
 import net.citizensnpcs.api.util.Messaging;
 import net.citizensnpcs.util.Messages;
-
-import org.bukkit.command.CommandSender;
-import org.bukkit.conversations.ConversationContext;
-import org.bukkit.conversations.Prompt;
-import org.bukkit.conversations.StringPrompt;
-
+import org.spongepowered.api.command.CommandSource;
 import com.google.common.collect.Lists;
 
 public class ChatTriggerPrompt extends StringPrompt implements WaypointTriggerPrompt {
@@ -24,10 +19,10 @@ public class ChatTriggerPrompt extends StringPrompt implements WaypointTriggerPr
             try {
                 radius = Double.parseDouble(input.split(" ")[1]);
             } catch (NumberFormatException e) {
-                Messaging.sendErrorTr((CommandSender) context.getForWhom(),
+                Messaging.sendErrorTr((CommandSource) context.getForWhom(),
                         Messages.WAYPOINT_TRIGGER_CHAT_INVALID_RADIUS);
             } catch (IndexOutOfBoundsException e) {
-                Messaging.sendErrorTr((CommandSender) context.getForWhom(), Messages.WAYPOINT_TRIGGER_CHAT_NO_RADIUS);
+                Messaging.sendErrorTr((CommandSource) context.getForWhom(), Messages.WAYPOINT_TRIGGER_CHAT_NO_RADIUS);
             }
             return this;
         }
@@ -41,7 +36,7 @@ public class ChatTriggerPrompt extends StringPrompt implements WaypointTriggerPr
 
     @Override
     public String getPromptText(ConversationContext context) {
-        Messaging.sendTr((CommandSender) context.getForWhom(), Messages.CHAT_TRIGGER_PROMPT);
+        Messaging.sendTr((CommandSource) context.getForWhom(), Messages.CHAT_TRIGGER_PROMPT);
         return "";
     }
 }

@@ -14,12 +14,6 @@ import java.util.WeakHashMap;
 
 import javax.annotation.Nullable;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
-
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
@@ -29,6 +23,11 @@ import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.npc.NPCRegistry;
 import net.citizensnpcs.util.Util;
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 /**
  * Tracks skin updates for players.
@@ -39,7 +38,7 @@ public class SkinUpdateTracker {
     private final Map<SkinnableEntity, Void> navigating = new WeakHashMap<SkinnableEntity, Void>(25);
     private final NPCRegistry npcRegistry;
     private final Map<UUID, PlayerTracker> playerTrackers = new HashMap<UUID, PlayerTracker>(
-            Bukkit.getMaxPlayers() / 2);
+            Sponge.getServer().getMaxPlayers() / 2);
     private final Map<String, NPCRegistry> registries;
     private final NPCNavigationUpdater updater = new NPCNavigationUpdater();
 
@@ -75,13 +74,13 @@ public class SkinUpdateTracker {
         if (!player.getWorld().equals(entity.getWorld()))
             return false;
 
-        Location playerLoc = player.getLocation(CACHE_LOCATION);
-        Location skinLoc = entity.getLocation(NPC_LOCATION);
+        Location<World> playerLoc = player.getLocation();
+        Location<World> skinLoc = entity.getLocation();
 
         double viewDistance = Settings.Setting.NPC_SKIN_VIEW_DISTANCE.asDouble();
         viewDistance *= viewDistance;
 
-        if (playerLoc.distanceSquared(skinLoc) > viewDistance)
+        if (playerLoc.getPosition().distanceSquared(skinLoc.getPosition()) > viewDistance)
             return false;
 
         // see if the NPC is within the players field of view
@@ -274,7 +273,7 @@ public class SkinUpdateTracker {
      * </p>
      */
     public void reset() {
-        for (Player player : Bukkit.getOnlinePlayers()) {
+        for (Player player : Sponge.getServer().getOnlinePlayers()) {
             if (player.hasMetadata("NPC"))
                 continue;
 
@@ -294,15 +293,15 @@ public class SkinUpdateTracker {
 
         double viewDistance = Settings.Setting.NPC_SKIN_VIEW_DISTANCE.asDouble();
         viewDistance *= viewDistance;
-        Location location = entity.getLocation(NPC_LOCATION);
+        Location<World> location = entity.getLocation();
         List<Player> players = entity.getWorld().getPlayers();
         for (Player player : players) {
             if (player.hasMetadata("NPC"))
                 continue;
-            Location ploc = player.getLocation(CACHE_LOCATION);
-            if (ploc.getWorld() != location.getWorld())
+            Location<World> ploc = player.getLocation();
+            if (ploc.getExtent() != location.getExtent())
                 continue;
-            double distanceSquared = ploc.distanceSquared(location);
+            double distanceSquared = ploc.getPosition().distanceSquared(location.getPosition());
             if (distanceSquared > viewDistance)
                 continue;
 
@@ -384,7 +383,7 @@ public class SkinUpdateTracker {
     private class PlayerTracker {
         final Set<SkinnableEntity> fovVisibleSkins = new HashSet<SkinnableEntity>(20);
         boolean hasMoved;
-        final Location location = new Location(null, 0, 0, 0);
+        final Location<World> location = new Location<World>(null, 0, 0, 0);
         float lowerBound;
         int rotationCount;
         float startYaw;
@@ -419,7 +418,7 @@ public class SkinUpdateTracker {
         }
 
         boolean shouldUpdate(Player player) {
-            Location currentLoc = player.getLocation(CACHE_LOCATION);
+            Location<World> currentLoc = player.getLocation();
 
             if (!hasMoved) {
                 hasMoved = true;
@@ -445,13 +444,13 @@ public class SkinUpdateTracker {
             }
 
             // make sure player is in same world
-            if (!currentLoc.getWorld().equals(this.location.getWorld())) {
+            if (!currentLoc.getExtent().equals(this.location.getExtent())) {
                 reset(player);
                 return true;
             }
 
             // update every time a player moves a certain distance
-            double distance = currentLoc.distanceSquared(this.location);
+            double distance = currentLoc.getPosition().distanceSquared(this.location.getPosition());
             if (distance > MOVEMENT_SKIN_UPDATE_DISTANCE) {
                 reset(player);
                 return true;
@@ -471,8 +470,8 @@ public class SkinUpdateTracker {
         }
     }
 
-    private static final Location CACHE_LOCATION = new Location(null, 0, 0, 0);
+    private static final Location<World> CACHE_LOCATION = new Location<World>(null, 0, 0, 0);
     private static final float FIELD_OF_VIEW = 70f;
     private static final int MOVEMENT_SKIN_UPDATE_DISTANCE = 50 * 50;
-    private static final Location NPC_LOCATION = new Location(null, 0, 0, 0);
+    private static final Location<World> NPC_LOCATION = new Location<World>(null, 0, 0, 0);
 }

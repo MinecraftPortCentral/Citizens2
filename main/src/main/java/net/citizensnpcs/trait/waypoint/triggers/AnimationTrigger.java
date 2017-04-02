@@ -6,11 +6,10 @@ import java.util.List;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.persistence.Persist;
 import net.citizensnpcs.util.PlayerAnimation;
-
-import org.bukkit.Location;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Player;
-
+import org.spongepowered.api.entity.EntityTypes;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 
@@ -31,8 +30,8 @@ public class AnimationTrigger implements WaypointTrigger {
     }
 
     @Override
-    public void onWaypointReached(NPC npc, Location waypoint) {
-        if (npc.getEntity().getType() != EntityType.PLAYER)
+    public void onWaypointReached(NPC npc, Location<World> waypoint) {
+        if (npc.getEntity().getType() != EntityTypes.PLAYER)
             return;
         Player player = (Player) npc.getEntity();
         for (PlayerAnimation animation : animations) {

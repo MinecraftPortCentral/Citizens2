@@ -1,19 +1,18 @@
 package net.citizensnpcs.trait;
 
-import org.bukkit.DyeColor;
-import org.bukkit.entity.Sheep;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.entity.SheepDyeWoolEvent;
-
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.exception.NPCLoadException;
 import net.citizensnpcs.api.trait.Trait;
 import net.citizensnpcs.api.trait.TraitName;
 import net.citizensnpcs.api.util.DataKey;
+import org.spongepowered.api.data.type.DyeColor;
+import org.spongepowered.api.data.type.DyeColors;
+import org.spongepowered.api.entity.living.animal.Sheep;
+import org.spongepowered.api.event.Listener;
 
 @TraitName("woolcolor")
 public class WoolColor extends Trait {
-    private DyeColor color = DyeColor.WHITE;
+    private DyeColor color = DyeColors.WHITE;
     boolean sheep = false;
 
     public WoolColor() {
@@ -29,7 +28,7 @@ public class WoolColor extends Trait {
         }
     }
 
-    @EventHandler
+    @Listener
     public void onSheepDyeWool(SheepDyeWoolEvent event) {
         if (npc.equals(CitizensAPI.getNPCRegistry().getNPC(event.getEntity())))
             event.setCancelled(true);

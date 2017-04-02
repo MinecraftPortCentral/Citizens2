@@ -3,9 +3,6 @@ package net.citizensnpcs.trait.waypoint;
 import java.util.Collections;
 import java.util.List;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-
 import com.google.common.collect.Lists;
 
 import net.citizensnpcs.api.CitizensAPI;
@@ -15,17 +12,19 @@ import net.citizensnpcs.api.persistence.PersistenceLoader;
 import net.citizensnpcs.trait.waypoint.triggers.DelayTrigger;
 import net.citizensnpcs.trait.waypoint.triggers.WaypointTrigger;
 import net.citizensnpcs.trait.waypoint.triggers.WaypointTriggerRegistry;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 public class Waypoint {
     @Persist(required = true)
-    private Location location;
+    private Location<World> location;
     @Persist
     private List<WaypointTrigger> triggers;
 
     public Waypoint() {
     }
 
-    public Waypoint(Location at) {
+    public Waypoint(Location<World> at) {
         location = at;
     }
 
@@ -36,7 +35,7 @@ public class Waypoint {
     }
 
     public double distance(Waypoint dest) {
-        return location.distance(dest.location);
+        return location.getPosition().distance(dest.location.getPosition());
     }
 
     @Override
@@ -65,7 +64,7 @@ public class Waypoint {
         return true;
     }
 
-    public Location getLocation() {
+    public Location<World> getLocation() {
         return location;
     }
 

@@ -3,18 +3,15 @@ package net.citizensnpcs.trait;
 import java.util.Collection;
 import java.util.List;
 
-import org.bukkit.boss.BarColor;
-import org.bukkit.boss.BarFlag;
-import org.bukkit.boss.BossBar;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-
 import com.google.common.collect.Lists;
 
 import net.citizensnpcs.api.persistence.Persist;
 import net.citizensnpcs.api.trait.Trait;
 import net.citizensnpcs.api.trait.TraitName;
 import net.citizensnpcs.util.NMS;
+import org.spongepowered.api.boss.BossBar;
+import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.entity.EntityTypes;
 
 @TraitName("bossbar")
 public class BossBarTrait extends Trait {
@@ -32,8 +29,8 @@ public class BossBarTrait extends Trait {
     }
 
     private boolean isBoss(Entity entity) {
-        return entity.getType() == EntityType.ENDER_DRAGON || entity.getType() == EntityType.WITHER
-                || entity.getType() == EntityType.GUARDIAN;
+        return entity.getType() == EntityTypes.ENDER_DRAGON || entity.getType() == EntityTypes.WITHER
+                || entity.getType() == EntityTypes.GUARDIAN;
     }
 
     @Override

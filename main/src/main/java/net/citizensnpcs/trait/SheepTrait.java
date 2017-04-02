@@ -1,19 +1,18 @@
 package net.citizensnpcs.trait;
 
-import org.bukkit.DyeColor;
-import org.bukkit.entity.Sheep;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.player.PlayerShearEntityEvent;
-
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.persistence.Persist;
 import net.citizensnpcs.api.trait.Trait;
 import net.citizensnpcs.api.trait.TraitName;
+import org.spongepowered.api.data.type.DyeColor;
+import org.spongepowered.api.data.type.DyeColors;
+import org.spongepowered.api.entity.living.animal.Sheep;
+import org.spongepowered.api.event.Listener;
 
 @TraitName("sheeptrait")
 public class SheepTrait extends Trait {
     @Persist("color")
-    private DyeColor color = DyeColor.WHITE;
+    private DyeColor color = DyeColors.WHITE;
     @Persist("sheared")
     private boolean sheared = false;
 
@@ -21,7 +20,7 @@ public class SheepTrait extends Trait {
         super("sheeptrait");
     }
 
-    @EventHandler
+    @Listener
     public void onPlayerShearEntityEvent(PlayerShearEntityEvent event) {
         if (npc != null && npc.equals(CitizensAPI.getNPCRegistry().getNPC(event.getEntity()))) {
             event.setCancelled(true);

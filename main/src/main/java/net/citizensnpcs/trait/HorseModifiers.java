@@ -1,13 +1,10 @@
 package net.citizensnpcs.trait;
 
-import org.bukkit.entity.Horse;
-import org.bukkit.entity.Horse.Color;
-import org.bukkit.entity.Horse.Style;
-import org.bukkit.inventory.ItemStack;
-
 import net.citizensnpcs.api.persistence.Persist;
 import net.citizensnpcs.api.trait.Trait;
 import net.citizensnpcs.api.trait.TraitName;
+import org.spongepowered.api.entity.living.animal.Horse;
+import org.spongepowered.api.item.inventory.ItemStack;
 
 @TraitName("horsemodifiers")
 public class HorseModifiers extends Trait {

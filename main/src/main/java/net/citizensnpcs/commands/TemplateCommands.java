@@ -16,8 +16,7 @@ import net.citizensnpcs.npc.Template;
 import net.citizensnpcs.npc.Template.TemplateBuilder;
 import net.citizensnpcs.util.Messages;
 
-import org.bukkit.command.CommandSender;
-
+import org.spongepowered.api.command.CommandSource;
 import com.google.common.base.Function;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
@@ -36,7 +35,7 @@ public class TemplateCommands {
             min = 2,
             permission = "citizens.templates.apply")
     @Requirements
-    public void apply(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    public void apply(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         Template template = Template.byName(args.getString(1));
         if (template == null)
             throw new CommandException(Messages.TEMPLATE_MISSING);
@@ -78,7 +77,7 @@ public class TemplateCommands {
             max = 2,
             flags = "o",
             permission = "citizens.templates.create")
-    public void create(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    public void create(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         String name = args.getString(1);
         if (Template.byName(name) != null)
             throw new CommandException(Messages.TEMPLATE_CONFLICT);
@@ -95,7 +94,7 @@ public class TemplateCommands {
             min = 2,
             max = 2,
             permission = "citizens.templates.delete")
-    public void delete(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    public void delete(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         String name = args.getString(1);
         if (Template.byName(name) == null)
             throw new CommandException(Messages.TEMPLATE_MISSING);
@@ -111,7 +110,7 @@ public class TemplateCommands {
             min = 1,
             max = 1,
             permission = "citizens.templates.list")
-    public void list(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    public void list(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         Messaging.sendTr(sender, Messages.TEMPLATE_LIST_HEADER);
         for (Template template : Template.allTemplates()) {
             Messaging.send(sender, "[[-]]    " + template.getName());

@@ -9,9 +9,6 @@ import java.util.WeakHashMap;
 
 import javax.annotation.Nullable;
 
-import org.bukkit.Bukkit;
-import org.bukkit.scheduler.BukkitTask;
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.mojang.authlib.GameProfile;

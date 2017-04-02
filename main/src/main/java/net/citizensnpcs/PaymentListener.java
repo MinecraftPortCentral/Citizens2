@@ -4,35 +4,40 @@ import net.citizensnpcs.Settings.Setting;
 import net.citizensnpcs.api.event.PlayerCreateNPCEvent;
 import net.citizensnpcs.api.util.Messaging;
 import net.citizensnpcs.util.Messages;
-import net.milkbowl.vault.economy.Economy;
-import net.milkbowl.vault.economy.EconomyResponse;
+import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.filter.IsCancelled;
+import org.spongepowered.api.service.economy.EconomyService;
+import org.spongepowered.api.service.economy.account.UniqueAccount;
+import org.spongepowered.api.service.economy.transaction.ResultType;
+import org.spongepowered.api.service.economy.transaction.TransactionResult;
+import org.spongepowered.api.util.Tristate;
 
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
+import java.math.BigDecimal;
 
 import com.google.common.base.Preconditions;
 
-public class PaymentListener implements Listener {
-    private final Economy provider;
+public class PaymentListener  {
+    private final EconomyService provider;
 
-    public PaymentListener(Economy provider) {
+    public PaymentListener(EconomyService provider) {
         Preconditions.checkNotNull(provider, "provider cannot be null");
         this.provider = provider;
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @IsCancelled(Tristate.FALSE)
+    @Listener
     public void onPlayerCreateNPC(PlayerCreateNPCEvent event) {
-        boolean hasAccount = provider.hasAccount(event.getCreator());
-        if (!hasAccount || event.getCreator().hasPermission("citizens.npc.ignore-cost"))
+        UniqueAccount account = provider.getOrCreateAccount(event.getCreator().getUniqueId()).orElse(null);
+        if (event.getCreator().hasPermission("citizens.npc.ignore-cost"))
             return;
         double cost = Setting.NPC_COST.asDouble();
-        EconomyResponse response = provider.withdrawPlayer(event.getCreator(), cost);
-        if (!response.transactionSuccess()) {
+        TransactionResult response = account.withdraw(this.provider.getDefaultCurrency(), new BigDecimal(cost), Citizens.pluginCause);
+        if (response.getResult() != ResultType.SUCCESS) {
             event.setCancelled(true);
-            event.setCancelReason(response.errorMessage);
+            event.setCancelReason(response.getResult().name());
             return;
         }
-        String formattedCost = provider.format(cost);
+        String formattedCost = Double.toString(cost);
         Messaging.sendTr(event.getCreator(), Messages.MONEY_WITHDRAWN, formattedCost);
     }
 }

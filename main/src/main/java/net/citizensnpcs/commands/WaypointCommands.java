@@ -9,8 +9,7 @@ import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.util.Messaging;
 import net.citizensnpcs.trait.waypoint.Waypoints;
 import net.citizensnpcs.util.Messages;
-
-import org.bukkit.command.CommandSender;
+import org.spongepowered.api.command.CommandSource;
 
 @Requirements(ownership = true, selected = true)
 public class WaypointCommands {
@@ -26,7 +25,7 @@ public class WaypointCommands {
             min = 1,
             max = 1,
             permission = "citizens.waypoints.disableteleport")
-    public void disableTeleporting(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    public void disableTeleporting(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         npc.getNavigator().getDefaultParameters().stuckAction(null);
         Messaging.sendTr(sender, Messages.WAYPOINT_TELEPORTING_DISABLED);
     }
@@ -40,7 +39,7 @@ public class WaypointCommands {
             max = 2,
             flags = "d",
             permission = "citizens.waypoints.provider")
-    public void provider(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    public void provider(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         Waypoints waypoints = npc.getTrait(Waypoints.class);
         if (args.argsLength() == 1) {
             if (args.hasFlag('d')) {

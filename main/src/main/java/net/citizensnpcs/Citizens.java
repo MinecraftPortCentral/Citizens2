@@ -2,20 +2,15 @@ package net.citizensnpcs;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
-
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.RegisteredServiceProvider;
-import org.bukkit.plugin.java.JavaPlugin;
+import java.util.concurrent.TimeUnit;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-
+import com.google.inject.Inject;
 import net.citizensnpcs.Settings.Setting;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.CitizensPlugin;
@@ -62,9 +57,30 @@ import net.citizensnpcs.util.NMS;
 import net.citizensnpcs.util.PlayerUpdateTask;
 import net.citizensnpcs.util.StringHelper;
 import net.citizensnpcs.util.Util;
-import net.milkbowl.vault.economy.Economy;
+import org.slf4j.Logger;
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.config.ConfigDir;
+import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.Order;
+import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.event.cause.NamedCause;
+import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
+import org.spongepowered.api.plugin.Plugin;
+import org.spongepowered.api.plugin.PluginContainer;
+import org.spongepowered.api.service.ProviderRegistration;
+import org.spongepowered.api.service.economy.EconomyService;
 
-public class Citizens extends JavaPlugin implements CitizensPlugin {
+@Plugin(id = "citizens", name = "Citizens", version = "1.0.0", description = "This plugin is designed to add NPC's to the world.")
+public class Citizens implements CitizensPlugin {
+
+    @Inject public PluginContainer pluginContainer;
+    @Inject private Logger logger;
+    @Inject @ConfigDir(sharedRoot = false)
+    private Path configPath;
+    private final File configFile = configPath.toFile();
+    public static Cause pluginCause;
+
     private final CommandManager commands = new CommandManager();
     private boolean compatible;
     private Settings config;
@@ -116,8 +132,8 @@ public class Citizens extends JavaPlugin implements CitizensPlugin {
         }
     }
 
-    private void enableSubPlugins() {
-        File root = new File(getDataFolder(), Setting.SUBPLUGIN_FOLDER.asString());
+    /*private void enableSubPlugins() {
+        File root = new File(this.configPath.toFile(), Setting.SUBPLUGIN_FOLDER.asString());
         if (!root.exists() || !root.isDirectory())
             return;
         File[] files = root.listFiles();
@@ -141,7 +157,7 @@ public class Citizens extends JavaPlugin implements CitizensPlugin {
             }
         }
         NMS.loadPlugins();
-    }
+    }*/
 
     public CommandInfo getCommandInfo(String rootCommand, String modifier) {
         return commands.getCommand(rootCommand, modifier);
@@ -202,13 +218,8 @@ public class Citizens extends JavaPlugin implements CitizensPlugin {
     }
 
     @Override
-    public ClassLoader getOwningClassLoader() {
-        return getClassLoader();
-    }
-
-    @Override
     public File getScriptFolder() {
-        return new File(getDataFolder(), "scripts");
+        return new File(this.configPath.toFile(), "scripts");
     }
 
     @Override
@@ -222,7 +233,7 @@ public class Citizens extends JavaPlugin implements CitizensPlugin {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, org.bukkit.command.Command command, String cmdName, String[] args) {
+    public boolean onCommand(CommandSource sender, org.bukkit.command.Command command, String cmdName, String[] args) {
         String modifier = args.length > 0 ? args[0] : "";
         if (!commands.hasCommand(command, modifier) && !modifier.isEmpty()) {
             return suggestClosestModifier(sender, command.getName(), modifier);
@@ -237,27 +248,12 @@ public class Citizens extends JavaPlugin implements CitizensPlugin {
         return commands.executeSafe(command, args, sender, methodArgs);
     }
 
-    @Override
-    public void onDisable() {
-        Bukkit.getPluginManager().callEvent(new CitizensDisableEvent());
-        Editor.leaveAll();
-
-        if (compatible) {
-            saves.storeAll(npcRegistry);
-            saves.saveToDiskImmediate();
-            despawnNPCs();
-            npcRegistry = null;
-            NMS.shutdown();
-        }
-
-        CitizensAPI.shutdown();
-    }
-
-    @Override
-    public void onEnable() {
+    @Listener(order = Order.LAST)
+    public void onPreInit(GamePreInitializationEvent event) {
+        pluginCause = Cause.of(NamedCause.source(this.pluginContainer));
         setupTranslator();
         CitizensAPI.setImplementation(this);
-        config = new Settings(getDataFolder());
+        config = new Settings(this.configPath.toFile());
         // Disable if the server is not using the compatible Minecraft version
         String mcVersion = Util.getMinecraftRevision();
         compatible = true;
@@ -268,16 +264,15 @@ public class Citizens extends JavaPlugin implements CitizensPlugin {
             if (Messaging.isDebugging()) {
                 e.printStackTrace();
             }
-            Messaging.severeTr(Messages.CITIZENS_INCOMPATIBLE, getDescription().getVersion(), mcVersion);
-            getServer().getPluginManager().disablePlugin(this);
+            Messaging.severeTr(Messages.CITIZENS_INCOMPATIBLE, this.pluginContainer.getVersion().get(), mcVersion);
             return;
         }
         registerScriptHelpers();
 
-        saves = createStorage(getDataFolder());
+        saves = createStorage(this.configFile);
         if (saves == null) {
             Messaging.severeTr(Messages.FAILED_LOAD_SAVES);
-            getServer().getPluginManager().disablePlugin(this);
+            //getServer().getPluginManager().disablePlugin(this);
             return;
         }
 
@@ -287,19 +282,19 @@ public class Citizens extends JavaPlugin implements CitizensPlugin {
         speechFactory = new CitizensSpeechFactory();
         speechFactory.register(Chat.class, "chat");
 
-        getServer().getPluginManager().registerEvents(new EventListen(storedRegistries), this);
+        Sponge.getEventManager().registerListeners(this.pluginContainer, new EventListen(storedRegistries));
 
         if (Setting.NPC_COST.asDouble() > 0) {
             setupEconomy();
         }
 
         registerCommands();
-        enableSubPlugins();
+        //enableSubPlugins();
         NMS.load(commands);
 
         // Setup NPCs after all plugins have been enabled (allows for multiworld
         // support and for NPCs to properly register external settings)
-        if (getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+        /*if (getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
             @Override
             public void run() {
                 saves.loadInto(npcRegistry);
@@ -311,14 +306,9 @@ public class Citizens extends JavaPlugin implements CitizensPlugin {
             }
         }, 1) == -1) {
             Messaging.severeTr(Messages.LOAD_TASK_NOT_SCHEDULED);
-            getServer().getPluginManager().disablePlugin(this);
-        }
-    }
-
-    @Override
-    public void onImplementationChanged() {
-        Messaging.severeTr(Messages.CITIZENS_IMPLEMENTATION_DISABLED);
-        Bukkit.getPluginManager().disablePlugin(this);
+            //getServer().getPluginManager().disablePlugin(this);
+        }*/
+        Sponge.getGame().getScheduler().createTaskBuilder().delay(Setting.SAVE_TASK_DELAY.asInt(), TimeUnit.MINUTES).execute(new PlayerUpdateTask()).submit(this.pluginContainer);
     }
 
     public void registerCommandClass(Class<?> clazz) {
@@ -353,12 +343,12 @@ public class Citizens extends JavaPlugin implements CitizensPlugin {
         despawnNPCs();
         ProfileFetcher.reset();
         Skin.clearCache();
-        getServer().getPluginManager().callEvent(new CitizensPreReloadEvent());
+        Sponge.getEventManager().post(new CitizensPreReloadEvent());
 
         saves = createStorage(getDataFolder());
         saves.loadInto(npcRegistry);
 
-        getServer().getPluginManager().callEvent(new CitizensReloadEvent());
+        Sponge.getEventManager().post(new CitizensReloadEvent());
     }
 
     @Override
@@ -378,10 +368,10 @@ public class Citizens extends JavaPlugin implements CitizensPlugin {
 
     private void setupEconomy() {
         try {
-            RegisteredServiceProvider<Economy> provider = Bukkit.getServicesManager().getRegistration(Economy.class);
+            ProviderRegistration<EconomyService> provider = Sponge.getServiceManager().getRegistration(EconomyService.class).orElse(null);
             if (provider != null && provider.getProvider() != null) {
-                Economy economy = provider.getProvider();
-                Bukkit.getPluginManager().registerEvents(new PaymentListener(economy), this);
+                EconomyService economy = provider.getProvider();
+                Sponge.getEventManager().registerListeners(this.pluginContainer, new PaymentListener(economy));
             }
         } catch (NoClassDefFoundError e) {
             Messaging.logTr(Messages.ERROR_LOADING_ECONOMY);
@@ -468,5 +458,10 @@ public class Citizens extends JavaPlugin implements CitizensPlugin {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public PluginContainer getPlugin() {
+        return this.pluginContainer;
     }
 }

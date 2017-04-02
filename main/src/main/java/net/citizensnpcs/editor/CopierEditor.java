@@ -4,12 +4,11 @@ import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.util.Messaging;
 import net.citizensnpcs.trait.CurrentLocation;
 import net.citizensnpcs.util.Messages;
-
-import org.bukkit.Location;
-import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.block.InteractBlockEvent;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 public class CopierEditor extends Editor {
     private final String name;
@@ -32,18 +31,15 @@ public class CopierEditor extends Editor {
         Messaging.sendTr(player, Messages.COPIER_EDITOR_END);
     }
 
-    @EventHandler
-    public void onBlockClick(PlayerInteractEvent event) {
-        if (event.getClickedBlock() == null) {
-            return;
-        }
+    @Listener
+    public void onBlockClick(InteractBlockEvent event) {
         NPC copy = npc.clone();
         if (!copy.getFullName().equals(name)) {
             copy.setName(name);
         }
 
         if (copy.isSpawned() && player.isOnline()) {
-            Location location = player.getLocation();
+            Location<World> location = player.getLocation();
             location.getChunk().load();
             copy.teleport(location, TeleportCause.PLUGIN);
             copy.getTrait(CurrentLocation.class).setLocation(location);

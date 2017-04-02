@@ -5,20 +5,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
-
 import com.google.common.base.Preconditions;
 
 import net.citizensnpcs.Settings;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.util.NMS;
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.network.ClientConnectionEvent;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 /**
  * Handles and synchronizes add and remove packets for Player type NPC's in order to properly apply the NPC skin.
@@ -29,7 +26,7 @@ import net.citizensnpcs.util.NMS;
  */
 public class SkinPacketTracker {
     private final SkinnableEntity entity;
-    private final Map<UUID, PlayerEntry> inProgress = new HashMap<UUID, PlayerEntry>(Bukkit.getMaxPlayers() / 2);
+    private final Map<UUID, PlayerEntry> inProgress = new HashMap<UUID, PlayerEntry>(Sponge.getServer().getMaxPlayers() / 2);
 
     private boolean isRemoved;
     private Skin skin;
@@ -48,7 +45,7 @@ public class SkinPacketTracker {
 
         if (LISTENER == null) {
             LISTENER = new PlayerListener();
-            Bukkit.getPluginManager().registerEvents(LISTENER, CitizensAPI.getPlugin());
+            Sponge.getEventManager().registerListeners(CitizensAPI.getPlugin(), LISTENER);
         }
     }
 
@@ -173,19 +170,19 @@ public class SkinPacketTracker {
     public void updateNearbyViewers(double radius) {
         radius *= radius;
 
-        org.bukkit.World world = entity.getBukkitEntity().getWorld();
+        World world = entity.getBukkitEntity().getWorld();
         Player from = entity.getBukkitEntity();
-        Location location = from.getLocation();
+        Location<World> location = from.getLocation();
 
         for (Player player : world.getPlayers()) {
             if (player == null || player.hasMetadata("NPC"))
                 continue;
 
-            player.getLocation(CACHE_LOCATION);
-            if (!player.canSee(from) || !location.getWorld().equals(CACHE_LOCATION.getWorld()))
+            player.getLocation();
+            if (!player.canSee(from) || !location.getExtent().equals(CACHE_LOCATION.getExtent()))
                 continue;
 
-            if (location.distanceSquared(CACHE_LOCATION) > radius)
+            if (location.getPosition().distanceSquared(CACHE_LOCATION.getPosition()) > radius)
                 continue;
 
             updateViewer(player);
@@ -239,15 +236,15 @@ public class SkinPacketTracker {
     }
 
     private static class PlayerListener implements Listener {
-        @EventHandler
-        private void onPlayerQuit(PlayerQuitEvent event) {
+        @Listener
+        private void onPlayerQuit(ClientConnectionEvent.Disconnect event) {
             // this also causes any entries in the "inProgress" field to
             // be removed.
             TAB_LIST_REMOVER.cancelPackets(event.getPlayer());
         }
     }
 
-    private static final Location CACHE_LOCATION = new Location(null, 0, 0, 0);
+    private static final Location<World> CACHE_LOCATION = new Location<World>(null, 0, 0, 0);
     private static PlayerListener LISTENER;
     private static final int PACKET_DELAY_REMOVE = 1;
     private static final TabListRemover TAB_LIST_REMOVER = new TabListRemover();

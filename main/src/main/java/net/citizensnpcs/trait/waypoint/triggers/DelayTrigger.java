@@ -1,13 +1,12 @@
 package net.citizensnpcs.trait.waypoint.triggers;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.persistence.Persist;
 import net.citizensnpcs.trait.waypoint.WaypointProvider;
 import net.citizensnpcs.trait.waypoint.Waypoints;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 public class DelayTrigger implements WaypointTrigger {
     @Persist
@@ -30,7 +29,7 @@ public class DelayTrigger implements WaypointTrigger {
     }
 
     @Override
-    public void onWaypointReached(NPC npc, Location waypoint) {
+    public void onWaypointReached(NPC npc, Location<World> waypoint) {
         if (delay > 0) {
             scheduleTask(npc.getTrait(Waypoints.class).getCurrentProvider());
         }

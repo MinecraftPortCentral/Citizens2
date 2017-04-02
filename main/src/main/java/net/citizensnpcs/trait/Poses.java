@@ -2,9 +2,6 @@ package net.citizensnpcs.trait;
 
 import java.util.Map;
 
-import org.bukkit.Location;
-import org.bukkit.command.CommandSender;
-
 import com.google.common.collect.Maps;
 
 import net.citizensnpcs.api.command.exception.CommandException;
@@ -17,6 +14,9 @@ import net.citizensnpcs.api.util.Paginator;
 import net.citizensnpcs.util.Messages;
 import net.citizensnpcs.util.Pose;
 import net.citizensnpcs.util.Util;
+import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 @TraitName("poses")
 public class Poses extends Trait {
@@ -26,7 +26,7 @@ public class Poses extends Trait {
         super("poses");
     }
 
-    public boolean addPose(String name, Location location) {
+    public boolean addPose(String name, Location<World> location) {
         name = name.toLowerCase();
         Pose newPose = new Pose(name, location.getPitch(), location.getYaw());
         if (poses.containsValue(newPose) || poses.containsKey(name))
@@ -42,7 +42,7 @@ public class Poses extends Trait {
         Util.assumePose(npc.getEntity(), yaw, pitch);
     }
 
-    public void assumePose(Location location) {
+    public void assumePose(Location<World> location) {
         assumePose(location.getYaw(), location.getPitch());
     }
 
@@ -51,7 +51,7 @@ public class Poses extends Trait {
         assumePose(pose.getYaw(), pose.getPitch());
     }
 
-    public void describe(CommandSender sender, int page) throws CommandException {
+    public void describe(CommandSource sender, int page) throws CommandException {
         Paginator paginator = new Paginator().header("Pose");
         paginator.addLine("<e>Key: <a>ID  <b>Name  <c>Pitch/Yaw");
         int i = 0;

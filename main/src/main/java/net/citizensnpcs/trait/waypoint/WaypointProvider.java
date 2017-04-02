@@ -1,10 +1,9 @@
 package net.citizensnpcs.trait.waypoint;
 
-import org.bukkit.command.CommandSender;
-
 import net.citizensnpcs.api.command.CommandContext;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.persistence.Persistable;
+import org.spongepowered.api.command.CommandSource;
 
 public interface WaypointProvider extends Persistable {
     /**
@@ -15,7 +14,7 @@ public interface WaypointProvider extends Persistable {
      * @param args
      * @return The editor
      */
-    public WaypointEditor createEditor(CommandSender sender, CommandContext args);
+    public WaypointEditor createEditor(CommandSource sender, CommandContext args);
 
     /**
      * Returns whether this provider has paused execution of waypoints.

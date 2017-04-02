@@ -2,12 +2,7 @@ package net.citizensnpcs.npc.ai;
 
 import java.util.List;
 
-import org.bukkit.Effect;
-import org.bukkit.Location;
-import org.bukkit.entity.EntityType;
-import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
-import org.bukkit.util.Vector;
-
+import com.flowpowered.math.vector.Vector3d;
 import com.google.common.collect.Lists;
 
 import net.citizensnpcs.api.ai.AbstractPathStrategy;
@@ -23,25 +18,28 @@ import net.citizensnpcs.api.astar.pathfinder.VectorGoal;
 import net.citizensnpcs.api.astar.pathfinder.VectorNode;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.util.NMS;
+import org.spongepowered.api.entity.EntityTypes;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 public class FlyingAStarNavigationStrategy extends AbstractPathStrategy {
     private final NPC npc;
     private final NavigatorParameters parameters;
     private Path plan;
     private boolean planned;
-    private final Location target;
-    private Vector vector;
+    private final Location<World> target;
+    private Vector3d vector;
 
-    public FlyingAStarNavigationStrategy(NPC npc, Iterable<Vector> path, NavigatorParameters params) {
+    public FlyingAStarNavigationStrategy(NPC npc, Iterable<Vector3d> path, NavigatorParameters params) {
         super(TargetType.LOCATION);
-        List<Vector> list = Lists.newArrayList(path);
-        this.target = list.get(list.size() - 1).toLocation(npc.getStoredLocation().getWorld());
+        List<Vector3d> list = Lists.newArrayList(path);
+        this.target = list.get(list.size() - 1).toLocation(npc.getStoredLocation().getExtent());
         this.parameters = params;
         this.npc = npc;
         setPlan(new Path(list));
     }
 
-    public FlyingAStarNavigationStrategy(final NPC npc, Location dest, NavigatorParameters params) {
+    public FlyingAStarNavigationStrategy(final NPC npc, Location<World> dest, NavigatorParameters params) {
         super(TargetType.LOCATION);
         this.target = dest;
         this.parameters = params;
@@ -49,12 +47,12 @@ public class FlyingAStarNavigationStrategy extends AbstractPathStrategy {
     }
 
     @Override
-    public Iterable<Vector> getPath() {
+    public Iterable<Vector3d> getPath() {
         return plan == null ? null : plan.getPath();
     }
 
     @Override
-    public Location getTargetAsLocation() {
+    public Location<World> getTargetAsLocation() {
         return target;
     }
 
@@ -82,7 +80,7 @@ public class FlyingAStarNavigationStrategy extends AbstractPathStrategy {
     @Override
     public boolean update() {
         if (!planned) {
-            Location location = npc.getEntity().getLocation();
+            Location<World> location = npc.getEntity().getLocation();
             VectorGoal goal = new VectorGoal(target, (float) parameters.pathDistanceMargin());
             boolean found = false;
             for (BlockExaminer examiner : parameters.examiners()) {
@@ -100,7 +98,7 @@ public class FlyingAStarNavigationStrategy extends AbstractPathStrategy {
         if (getCancelReason() != null || plan == null || plan.isComplete()) {
             return true;
         }
-        Location current = npc.getEntity().getLocation(NPC_LOCATION);
+        Location current = npc.getEntity().getLocation();
         if (current.toVector().distanceSquared(vector) <= parameters.distanceMargin()) {
             plan.update(npc);
             if (plan.isComplete()) {
@@ -117,7 +115,7 @@ public class FlyingAStarNavigationStrategy extends AbstractPathStrategy {
         double d1 = vector.getY() + 0.1D - current.getY();
         double d2 = vector.getZ() + 0.5D - current.getZ();
 
-        Vector velocity = npc.getEntity().getVelocity();
+        Vector3d velocity = npc.getEntity().getVelocity();
         double motX = velocity.getX(), motY = velocity.getY(), motZ = velocity.getZ();
 
         motX += (Math.signum(d0) * 0.5D - motX) * 0.1;
@@ -135,7 +133,7 @@ public class FlyingAStarNavigationStrategy extends AbstractPathStrategy {
         velocity.setX(motX).setY(motY).setZ(motZ).multiply(parameters.speed());
         npc.getEntity().setVelocity(velocity);
 
-        if (npc.getEntity().getType() != EntityType.ENDER_DRAGON) {
+        if (npc.getEntity().getType() != EntityTypes.ENDER_DRAGON) {
             NMS.setVerticalMovement(npc.getEntity(), 0.5);
             float newYaw = current.getYaw() + normalisedTargetYaw;
             current.setYaw(newYaw);
@@ -148,5 +146,5 @@ public class FlyingAStarNavigationStrategy extends AbstractPathStrategy {
     }
 
     private static final AStarMachine<VectorNode, Path> ASTAR = AStarMachine.createWithDefaultStorage();
-    private static final Location NPC_LOCATION = new Location(null, 0, 0, 0);
+    private static final Location<World> NPC_LOCATION = new Location<World>(null, 0, 0, 0);
 }

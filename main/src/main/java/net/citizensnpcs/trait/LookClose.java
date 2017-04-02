@@ -4,13 +4,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
-
 import net.citizensnpcs.Settings.Setting;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.command.CommandConfigurable;
@@ -20,6 +13,11 @@ import net.citizensnpcs.api.trait.Trait;
 import net.citizensnpcs.api.trait.TraitName;
 import net.citizensnpcs.api.util.DataKey;
 import net.citizensnpcs.util.Util;
+import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.entity.living.Living;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 @TraitName("lookclose")
 public class LookClose extends Trait implements Toggleable, CommandConfigurable {
@@ -33,8 +31,8 @@ public class LookClose extends Trait implements Toggleable, CommandConfigurable 
     }
 
     private boolean canSeeTarget() {
-        return realisticLooking && npc.getEntity() instanceof LivingEntity
-                ? ((LivingEntity) npc.getEntity()).hasLineOfSight(lookingAt) : true;
+        return realisticLooking && npc.getEntity() instanceof Living
+                ? ((Living) npc.getEntity()).hasLineOfSight(lookingAt) : true;
     }
 
     @Override
@@ -45,16 +43,16 @@ public class LookClose extends Trait implements Toggleable, CommandConfigurable 
     }
 
     private void findNewTarget() {
-        List<Entity> nearby = npc.getEntity().getNearbyEntities(range, range, range);
+        List<Entity> nearby = npc.getEntity().getNearbyEntities(range);
         Collections.sort(nearby, new Comparator<Entity>() {
             @Override
             public int compare(Entity o1, Entity o2) {
-                Location l1 = o1.getLocation(CACHE_LOCATION);
-                Location l2 = o2.getLocation(CACHE_LOCATION2);
-                if (!NPC_LOCATION.getWorld().equals(l1.getWorld()) || !NPC_LOCATION.getWorld().equals(l2.getWorld())) {
+                Location<World> l1 = o1.getLocation();
+                Location<World> l2 = o2.getLocation();
+                if (!NPC_LOCATION.getExtent().equals(l1.getExtent()) || !NPC_LOCATION.getExtent().equals(l2.getExtent())) {
                     return -1;
                 }
-                return Double.compare(l1.distanceSquared(NPC_LOCATION), l2.distanceSquared(NPC_LOCATION));
+                return Double.compare(l1.getPosition().distanceSquared(NPC_LOCATION.getPosition()), l2.getPosition().distanceSquared(NPC_LOCATION.getPosition()));
             }
         });
         for (Entity entity : nearby) {
@@ -71,7 +69,7 @@ public class LookClose extends Trait implements Toggleable, CommandConfigurable 
         if (lookingAt == null)
             return true;
         if (!lookingAt.isOnline() || lookingAt.getWorld() != npc.getEntity().getWorld()
-                || lookingAt.getLocation(PLAYER_LOCATION).distanceSquared(NPC_LOCATION) > range) {
+                || lookingAt.getLocation().getPosition().distanceSquared(NPC_LOCATION.getPosition()) > range) {
             lookingAt = null;
         }
         return lookingAt == null;
@@ -132,8 +130,8 @@ public class LookClose extends Trait implements Toggleable, CommandConfigurable 
         return "LookClose{" + enabled + "}";
     }
 
-    private static final Location CACHE_LOCATION = new Location(null, 0, 0, 0);
-    private static final Location CACHE_LOCATION2 = new Location(null, 0, 0, 0);
-    private static final Location NPC_LOCATION = new Location(null, 0, 0, 0);
-    private static final Location PLAYER_LOCATION = new Location(null, 0, 0, 0);
+    private static final Location<World> CACHE_LOCATION = new Location<World>(null, 0, 0, 0);
+    private static final Location<World> CACHE_LOCATION2 = new Location<World>(null, 0, 0, 0);
+    private static final Location<World> NPC_LOCATION = new Location<World>(null, 0, 0, 0);
+    private static final Location<World> PLAYER_LOCATION = new Location<World>(null, 0, 0, 0);
 }

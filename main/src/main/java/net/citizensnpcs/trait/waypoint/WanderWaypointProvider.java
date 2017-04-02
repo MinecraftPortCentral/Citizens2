@@ -1,10 +1,5 @@
 package net.citizensnpcs.trait.waypoint;
 
-import org.bukkit.Bukkit;
-import org.bukkit.command.CommandSender;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
-
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.ai.Goal;
 import net.citizensnpcs.api.ai.goals.WanderGoal;
@@ -14,6 +9,8 @@ import net.citizensnpcs.api.persistence.Persist;
 import net.citizensnpcs.api.util.DataKey;
 import net.citizensnpcs.api.util.Messaging;
 import net.citizensnpcs.util.Messages;
+import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.event.Listener;
 
 public class WanderWaypointProvider implements WaypointProvider {
     private Goal currentGoal;
@@ -25,7 +22,7 @@ public class WanderWaypointProvider implements WaypointProvider {
     public int yrange = DEFAULT_YRANGE;
 
     @Override
-    public WaypointEditor createEditor(final CommandSender sender, CommandContext args) {
+    public WaypointEditor createEditor(final CommandSource sender, CommandContext args) {
         return new WaypointEditor() {
             @Override
             public void begin() {
@@ -37,7 +34,7 @@ public class WanderWaypointProvider implements WaypointProvider {
                 Messaging.sendTr(sender, Messages.WANDER_WAYPOINTS_END);
             }
 
-            @EventHandler(ignoreCancelled = true)
+            @Listener
             public void onPlayerChat(AsyncPlayerChatEvent event) {
                 if (!event.getPlayer().equals(sender))
                     return;

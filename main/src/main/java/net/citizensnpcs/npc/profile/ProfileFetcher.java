@@ -4,9 +4,6 @@ import java.util.Collection;
 
 import javax.annotation.Nullable;
 
-import org.bukkit.Bukkit;
-import org.bukkit.scheduler.BukkitTask;
-
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.mojang.authlib.Agent;

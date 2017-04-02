@@ -2,16 +2,15 @@ package net.citizensnpcs.trait.waypoint;
 
 import java.util.Map;
 
-import org.bukkit.Location;
-import org.bukkit.World;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-
 import com.google.common.collect.Maps;
 
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.MemoryNPCDataStore;
 import net.citizensnpcs.api.npc.NPC;
+import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.entity.EntityTypes;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 public class WaypointMarkers {
     private final Map<Waypoint, Entity> waypointMarkers = Maps.newHashMap();
@@ -22,7 +21,7 @@ public class WaypointMarkers {
     }
 
     public Entity createWaypointMarker(Waypoint waypoint) {
-        Entity entity = spawnMarker(world, waypoint.getLocation().clone().add(0, 1, 0));
+        Entity entity = spawnMarker(world, waypoint.getLocation().add(0, 1, 0));
         if (entity == null)
             return null;
         waypointMarkers.put(waypoint, entity);
@@ -43,8 +42,8 @@ public class WaypointMarkers {
         }
     }
 
-    public Entity spawnMarker(World world, Location at) {
-        NPC npc = CitizensAPI.createAnonymousNPCRegistry(new MemoryNPCDataStore()).createNPC(EntityType.ENDER_SIGNAL,
+    public Entity spawnMarker(World world, Location<World> at) {
+        NPC npc = CitizensAPI.createAnonymousNPCRegistry(new MemoryNPCDataStore()).createNPC(EntityTypes.ENDER_SIGNAL,
                 "");
         npc.spawn(at);
         return npc.getEntity();

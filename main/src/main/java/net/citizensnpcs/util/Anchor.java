@@ -1,16 +1,17 @@
 package net.citizensnpcs.util;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 /*
  * Anchor object which holds a Location with a name to identify.
  */
 
 public class Anchor {
-    private Location location;
+    private Location<World> location;
     private final String name;
 
     // Needed for Anchors defined that can't currently have a valid 'Location'
@@ -23,10 +24,10 @@ public class Anchor {
         this.name = name;
     }
 
-    public Anchor(String name, Location location) {
+    public Anchor(String name, Location<World> location) {
         this.location = location;
         this.name = name;
-        this.unloaded_value = location.getWorld().getName() + ';' + location.getX() + ';' + location.getY() + ';'
+        this.unloaded_value = location.getExtent().getName() + ';' + location.getX() + ';' + location.getY() + ';'
                 + location.getZ();
     }
 
@@ -37,7 +38,7 @@ public class Anchor {
     public boolean load() {
         try {
             String[] parts = getUnloadedValue();
-            this.location = new Location(Bukkit.getWorld(parts[0]), Double.valueOf(parts[1]), Double.valueOf(parts[2]),
+            this.location = new Location<World>(Sponge.getServer().getWorld(parts[0]).get(), Double.valueOf(parts[1]), Double.valueOf(parts[2]),
                     Double.valueOf(parts[3]));
         } catch (Exception e) {
             // Still not able to be loaded
@@ -58,7 +59,7 @@ public class Anchor {
         return new EqualsBuilder().append(name, op.name).isEquals();
     }
 
-    public Location getLocation() {
+    public Location<World> getLocation() {
         return location;
     }
 

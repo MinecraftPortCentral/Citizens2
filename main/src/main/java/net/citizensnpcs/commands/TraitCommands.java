@@ -2,9 +2,6 @@ package net.citizensnpcs.commands;
 
 import java.util.List;
 
-import org.bukkit.Bukkit;
-import org.bukkit.command.CommandSender;
-
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
@@ -22,6 +19,8 @@ import net.citizensnpcs.api.trait.Trait;
 import net.citizensnpcs.api.util.Messaging;
 import net.citizensnpcs.util.Messages;
 import net.citizensnpcs.util.StringHelper;
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.command.CommandSource;
 
 @Requirements(selected = true, ownership = true)
 public class TraitCommands {
@@ -32,7 +31,7 @@ public class TraitCommands {
             modifiers = { "add", "a" },
             min = 2,
             permission = "citizens.npc.trait")
-    public void add(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    public void add(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         List<String> added = Lists.newArrayList();
         List<String> failed = Lists.newArrayList();
         for (String traitName : Splitter.on(',').split(args.getJoinedStrings(1))) {
@@ -60,9 +59,9 @@ public class TraitCommands {
             Messaging.sendTr(sender, Messages.TRAITS_FAILED_TO_ADD, Joiner.on(", ").join(failed));
     }
 
-    private void addTrait(NPC npc, Class<? extends Trait> clazz, CommandSender sender) {
+    private void addTrait(NPC npc, Class<? extends Trait> clazz, CommandSource sender) {
         npc.addTrait(clazz);
-        Bukkit.getPluginManager().callEvent(new NPCTraitCommandAttachEvent(npc, clazz, sender));
+        Sponge.getEventManager().post(new NPCTraitCommandAttachEvent(npc, clazz, sender));
     }
 
     @Command(
@@ -73,7 +72,7 @@ public class TraitCommands {
             min = 1,
             flags = "*",
             permission = "citizens.npc.trait-configure")
-    public void configure(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    public void configure(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         String traitName = args.getString(0);
         if (!sender.hasPermission("citizens.npc.trait-configure." + traitName)
                 && !sender.hasPermission("citizens.npc.trait-configure.*"))
@@ -96,7 +95,7 @@ public class TraitCommands {
             modifiers = { "remove", "rem", "r" },
             min = 1,
             permission = "citizens.npc.trait")
-    public void remove(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    public void remove(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         List<String> removed = Lists.newArrayList();
         List<String> failed = Lists.newArrayList();
         for (String traitName : Splitter.on(',').split(args.getJoinedStrings(0))) {
@@ -132,7 +131,7 @@ public class TraitCommands {
             modifiers = { "*" },
             min = 1,
             permission = "citizens.npc.trait")
-    public void toggle(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    public void toggle(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         List<String> added = Lists.newArrayList();
         List<String> removed = Lists.newArrayList();
         List<String> failed = Lists.newArrayList();

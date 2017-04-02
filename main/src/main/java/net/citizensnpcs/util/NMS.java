@@ -4,20 +4,7 @@ import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.List;
 
-import org.bukkit.Location;
-import org.bukkit.block.Block;
-import org.bukkit.boss.BossBar;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.FishHook;
-import org.bukkit.entity.Horse;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Tameable;
-import org.bukkit.entity.Wither;
-import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
-import org.bukkit.inventory.meta.SkullMeta;
-import org.bukkit.util.Vector;
-
+import com.flowpowered.math.vector.Vector3d;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.GameProfileRepository;
 
@@ -32,21 +19,33 @@ import net.citizensnpcs.api.util.Messaging;
 import net.citizensnpcs.npc.ai.MCNavigationStrategy.MCNavigator;
 import net.citizensnpcs.npc.ai.MCTargetStrategy.TargetNavigator;
 import net.citizensnpcs.npc.skin.SkinnableEntity;
+import net.minecraft.block.Block;
+import org.spongepowered.api.block.tileentity.Skull;
+import org.spongepowered.api.boss.BossBar;
+import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.entity.living.Living;
+import org.spongepowered.api.entity.living.animal.Horse;
+import org.spongepowered.api.entity.living.monster.Wither;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.entity.projectile.FishHook;
+import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 public class NMS {
     private NMS() {
         // util class
     }
 
-    public static boolean addEntityToWorld(org.bukkit.entity.Entity entity, SpawnReason custom) {
-        return BRIDGE.addEntityToWorld(entity, custom);
+    public static boolean addEntityToWorld(org.spongepowered.api.entity.Entity entity, Cause cause) {
+        return BRIDGE.addEntityToWorld(entity, cause);
     }
 
-    public static void addOrRemoveFromPlayerList(org.bukkit.entity.Entity entity, boolean remove) {
+    public static void addOrRemoveFromPlayerList(org.spongepowered.api.entity.Entity entity, boolean remove) {
         BRIDGE.addOrRemoveFromPlayerList(entity, remove);
     }
 
-    public static void attack(LivingEntity attacker, LivingEntity bukkitTarget) {
+    public static void attack(Living attacker, Living bukkitTarget) {
         BRIDGE.attack(attacker, bukkitTarget);
     }
 
@@ -62,11 +61,11 @@ public class NMS {
         return BRIDGE.getBlockBreaker(entity, targetBlock, config);
     }
 
-    public static BossBar getBossBar(org.bukkit.entity.Entity entity) {
+    public static BossBar getBossBar(org.spongepowered.api.entity.Entity entity) {
         return BRIDGE.getBossBar(entity);
     }
 
-    public static BoundingBox getBoundingBox(org.bukkit.entity.Entity handle) {
+    public static BoundingBox getBoundingBox(org.spongepowered.api.entity.Entity handle) {
         return BRIDGE.getBoundingBox(handle);
     }
 
@@ -87,11 +86,11 @@ public class NMS {
         return BRIDGE.getGameProfileRepository();
     }
 
-    public static float getHeadYaw(org.bukkit.entity.Entity entity) {
+    public static float getHeadYaw(org.spongepowered.api.entity.Entity entity) {
         return BRIDGE.getHeadYaw(entity);
     }
 
-    public static float getHorizontalMovement(org.bukkit.entity.Entity bukkitEntity) {
+    public static float getHorizontalMovement(org.spongepowered.api.entity.Entity bukkitEntity) {
         return BRIDGE.getHorizontalMovement(bukkitEntity);
     }
 
@@ -99,11 +98,11 @@ public class NMS {
         return BRIDGE.getNPC(entity);
     }
 
-    public static List<org.bukkit.entity.Entity> getPassengers(org.bukkit.entity.Entity entity) {
+    public static List<org.spongepowered.api.entity.Entity> getPassengers(org.spongepowered.api.entity.Entity entity) {
         return BRIDGE.getPassengers(entity);
     }
 
-    public static GameProfile getProfile(SkullMeta meta) {
+    public static GameProfile getProfile(Skull meta) {
         return BRIDGE.getProfile(meta);
     }
 
@@ -115,11 +114,11 @@ public class NMS {
         return BRIDGE.getSpeedFor(npc);
     }
 
-    public static float getStepHeight(org.bukkit.entity.Entity entity) {
+    public static float getStepHeight(org.spongepowered.api.entity.Entity entity) {
         return BRIDGE.getStepHeight(entity);
     }
 
-    public static MCNavigator getTargetNavigator(Entity entity, Iterable<Vector> dest, NavigatorParameters params) {
+    public static MCNavigator getTargetNavigator(Entity entity, Iterable<Vector3d> dest, NavigatorParameters params) {
         return BRIDGE.getTargetNavigator(entity, dest, params);
     }
 
@@ -127,20 +126,20 @@ public class NMS {
         return BRIDGE.getTargetNavigator(entity, dest, params);
     }
 
-    public static TargetNavigator getTargetNavigator(org.bukkit.entity.Entity entity, org.bukkit.entity.Entity target,
+    public static TargetNavigator getTargetNavigator(org.spongepowered.api.entity.Entity entity, org.spongepowered.api.entity.Entity target,
             NavigatorParameters parameters) {
         return BRIDGE.getTargetNavigator(entity, target, parameters);
     }
 
-    public static org.bukkit.entity.Entity getVehicle(org.bukkit.entity.Entity entity) {
+    public static org.spongepowered.api.entity.Entity getVehicle(org.spongepowered.api.entity.Entity entity) {
         return BRIDGE.getVehicle(entity);
     }
 
-    public static float getVerticalMovement(org.bukkit.entity.Entity bukkitEntity) {
+    public static float getVerticalMovement(org.spongepowered.api.entity.Entity bukkitEntity) {
         return BRIDGE.getVerticalMovement(bukkitEntity);
     }
 
-    public static boolean isOnGround(org.bukkit.entity.Entity entity) {
+    public static boolean isOnGround(org.spongepowered.api.entity.Entity entity) {
         return BRIDGE.isOnGround(entity);
     }
 
@@ -161,15 +160,15 @@ public class NMS {
         BRIDGE.look(entity, yaw, pitch);
     }
 
-    public static void look(org.bukkit.entity.Entity entity, Location to, boolean headOnly, boolean immediate) {
+    public static void look(org.spongepowered.api.entity.Entity entity, Location<World> to, boolean headOnly, boolean immediate) {
         BRIDGE.look(entity, to, headOnly, immediate);
     }
 
-    public static void look(org.bukkit.entity.Entity bhandle, org.bukkit.entity.Entity btarget) {
+    public static void look(org.spongepowered.api.entity.Entity bhandle, org.spongepowered.api.entity.Entity btarget) {
         BRIDGE.look(bhandle, btarget);
     }
 
-    public static void mount(org.bukkit.entity.Entity entity, org.bukkit.entity.Entity passenger) {
+    public static void mount(org.spongepowered.api.entity.Entity entity, org.spongepowered.api.entity.Entity passenger) {
         BRIDGE.mount(entity, passenger);
     }
 
@@ -189,7 +188,7 @@ public class NMS {
         BRIDGE.removeFromServerPlayerList(player);
     }
 
-    public static void removeFromWorld(org.bukkit.entity.Entity entity) {
+    public static void removeFromWorld(org.spongepowered.api.entity.Entity entity) {
         BRIDGE.removeFromWorld(entity);
     }
 
@@ -201,7 +200,7 @@ public class NMS {
         BRIDGE.replaceTrackerEntry(player);
     }
 
-    public static void sendPositionUpdate(Player excluding, org.bukkit.entity.Entity from, Location storedLocation) {
+    public static void sendPositionUpdate(Player excluding, org.spongepowered.api.entity.Entity from, Location<World> storedLocation) {
         BRIDGE.sendPositionUpdate(excluding, from, storedLocation);
     }
 
@@ -217,28 +216,28 @@ public class NMS {
         BRIDGE.sendTabListRemove(recipient, listPlayer);
     }
 
-    public static void setDestination(org.bukkit.entity.Entity entity, double x, double y, double z, float speed) {
+    public static void setDestination(org.spongepowered.api.entity.Entity entity, double x, double y, double z, float speed) {
         BRIDGE.setDestination(entity, x, y, z, speed);
     }
 
-    public static void setHeadYaw(org.bukkit.entity.Entity entity, float yaw) {
+    public static void setHeadYaw(org.spongepowered.api.entity.Entity entity, float yaw) {
         BRIDGE.setHeadYaw(entity, yaw);
     }
 
-    public static void setKnockbackResistance(org.bukkit.entity.LivingEntity entity, double d) {
+    public static void setKnockbackResistance(Living entity, double d) {
         BRIDGE.setKnockbackResistance(entity, d);
     }
 
-    public static void setNavigationTarget(org.bukkit.entity.Entity handle, org.bukkit.entity.Entity target,
+    public static void setNavigationTarget(org.spongepowered.api.entity.Entity handle, org.spongepowered.api.entity.Entity target,
             float speed) {
         BRIDGE.setNavigationTarget(handle, target, speed);
     }
 
-    public static void setProfile(SkullMeta meta, GameProfile profile) {
+    public static void setProfile(Skull meta, GameProfile profile) {
         BRIDGE.setProfile(meta, profile);
     }
 
-    public static void setShouldJump(org.bukkit.entity.Entity entity) {
+    public static void setShouldJump(org.spongepowered.api.entity.Entity entity) {
         BRIDGE.setShouldJump(entity);
     }
 
@@ -246,11 +245,11 @@ public class NMS {
         BRIDGE.setSitting(tameable, sitting);
     }
 
-    public static void setStepHeight(org.bukkit.entity.Entity entity, float height) {
+    public static void setStepHeight(org.spongepowered.api.entity.Entity entity, float height) {
         BRIDGE.setStepHeight(entity, height);
     }
 
-    public static void setVerticalMovement(org.bukkit.entity.Entity bukkitEntity, double d) {
+    public static void setVerticalMovement(org.spongepowered.api.entity.Entity bukkitEntity, double d) {
         BRIDGE.setVerticalMovement(bukkitEntity, d);
     }
 
@@ -258,7 +257,7 @@ public class NMS {
         BRIDGE.setWitherCharged(wither, charged);
     }
 
-    public static boolean shouldJump(org.bukkit.entity.Entity entity) {
+    public static boolean shouldJump(org.spongepowered.api.entity.Entity entity) {
         return BRIDGE.shouldJump(entity);
     }
 
@@ -270,15 +269,15 @@ public class NMS {
         return BRIDGE.tick(next);
     }
 
-    public static void trySwim(org.bukkit.entity.Entity entity) {
+    public static void trySwim(org.spongepowered.api.entity.Entity entity) {
         BRIDGE.trySwim(entity);
     }
 
-    public static void trySwim(org.bukkit.entity.Entity entity, float power) {
+    public static void trySwim(org.spongepowered.api.entity.Entity entity, float power) {
         BRIDGE.trySwim(entity, power);
     }
 
-    public static void updateNavigationWorld(org.bukkit.entity.Entity entity, org.bukkit.World world) {
+    public static void updateNavigationWorld(org.spongepowered.api.entity.Entity entity, org.spongepowered.api.world.World world) {
         BRIDGE.updateNavigationWorld(entity, world);
     }
 

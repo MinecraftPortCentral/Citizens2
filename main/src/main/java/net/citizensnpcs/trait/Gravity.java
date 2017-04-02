@@ -1,7 +1,6 @@
 package net.citizensnpcs.trait;
 
-import org.bukkit.util.Vector;
-
+import com.flowpowered.math.vector.Vector3d;
 import net.citizensnpcs.api.persistence.Persist;
 import net.citizensnpcs.api.trait.Trait;
 import net.citizensnpcs.api.trait.TraitName;
@@ -29,7 +28,7 @@ public class Gravity extends Trait implements Toggleable {
             return;
         if (!enabled || npc.getNavigator().isNavigating())
             return;
-        Vector vector = npc.getEntity().getVelocity();
+        Vector3d vector = npc.getEntity().getVelocity();
         vector.setY(Math.max(0, vector.getY()));
         npc.getEntity().setVelocity(vector);
     }

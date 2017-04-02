@@ -1,8 +1,5 @@
 package net.citizensnpcs.trait.waypoint.triggers;
 
-import org.bukkit.conversations.ConversationContext;
-import org.bukkit.conversations.Prompt;
-
 /**
  * Marker interface for waypoint trigger prompts.
  * 
