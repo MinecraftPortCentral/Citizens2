@@ -7,6 +7,7 @@ import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.conv.ConversationContext;
 import org.spongepowered.api.conv.Prompt;
 import org.spongepowered.api.conv.StringPrompt;
+import org.spongepowered.api.text.serializer.TextSerializers;
 
 public class TextStartPrompt extends StringPrompt {
     private final Text text;
@@ -17,7 +18,7 @@ public class TextStartPrompt extends StringPrompt {
 
     @Override
     public Prompt acceptInput(ConversationContext context, String original) {
-        String[] parts = ChatColor.stripColor(original.trim()).split(" ");
+        String[] parts = TextSerializers.LEGACY_FORMATTING_CODE.stripCodes(original.trim()).split(" ");
         String input = parts[0];
         CommandSource sender = (CommandSource) context.getForWhom();
         if (input.equalsIgnoreCase("add"))

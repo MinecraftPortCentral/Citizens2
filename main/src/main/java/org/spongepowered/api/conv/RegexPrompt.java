@@ -2,14 +2,20 @@ package org.spongepowered.api.conv;
 
 import java.util.regex.Pattern;
 
-public abstract class RegexPrompt implements Prompt {
+public abstract class RegexPrompt extends ValidatingPrompt {
+
+    private final Pattern pattern;
 
     public RegexPrompt(Pattern pattern) {
-        // TODO Auto-generated constructor stub
+        this.pattern = pattern;
     }
 
-    protected abstract Prompt acceptValidatedInput(ConversationContext context, String input);
+    @Override
+    protected boolean isInputValid(ConversationContext context, String input) {
+        return this.pattern.matcher(input).matches();
+    }
 
+    @Override
     public abstract String getPromptText(ConversationContext context);
 
 }

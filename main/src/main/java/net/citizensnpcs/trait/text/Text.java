@@ -17,7 +17,6 @@ import net.citizensnpcs.util.Messages;
 import net.citizensnpcs.util.Util;
 import org.spongepowered.api.conv.Conversation;
 import org.spongepowered.api.conv.ConversationAbandonedEvent;
-import org.spongepowered.api.conv.ConversationFactory;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
@@ -42,7 +41,7 @@ public class Text extends Trait implements Runnable, Toggleable {
     private double range = Setting.DEFAULT_TALK_CLOSE_RANGE.asDouble();
     private boolean realisticLooker = Setting.DEFAULT_REALISTIC_LOOKING.asBoolean();
     private boolean talkClose = Setting.DEFAULT_TALK_CLOSE.asBoolean();
-    private final List<String> text = new ArrayList<String>();
+    private final List<String> text = new ArrayList<>();
 
     public Text() {
         super("text");
@@ -53,7 +52,6 @@ public class Text extends Trait implements Runnable, Toggleable {
         text.add(string);
     }
 
-    @Listener
     public void conversationAbandoned(ConversationAbandonedEvent event) {
         Bukkit.dispatchCommand((Player) event.getContext().getForWhom(), "npc text");
     }
@@ -63,9 +61,9 @@ public class Text extends Trait implements Runnable, Toggleable {
     }
 
     public Editor getEditor(final Player player) {
-        final Conversation conversation = new ConversationFactory(plugin).addConversationAbandonedListener(this)
-                .withLocalEcho(false).withEscapeSequence("/npc text").withEscapeSequence("exit").withModality(false)
-                .withFirstPrompt(new TextStartPrompt(this)).buildConversation(player);
+        final Conversation conversation = Conversation.builder(plugin).addConversationAbandonedListener(this::conversationAbandoned)
+                .localEcho(false).escapeSequence("/npc text").escapeSequence("exit").modality(false)
+                .firstPrompt(new TextStartPrompt(this)).build(player);
         return new Editor() {
             @Override
             public void begin() {

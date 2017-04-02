@@ -8,7 +8,6 @@ import net.citizensnpcs.util.Messages;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.conv.Conversation;
 import org.spongepowered.api.conv.ConversationContext;
-import org.spongepowered.api.conv.ConversationFactory;
 import org.spongepowered.api.conv.Prompt;
 import org.spongepowered.api.conv.StringPrompt;
 import org.spongepowered.api.entity.living.player.Player;
@@ -52,9 +51,9 @@ public class TriggerEditPrompt extends StringPrompt {
     }
 
     public static Conversation start(Player player, WaypointEditor editor) {
-        final Conversation conversation = new ConversationFactory(CitizensAPI.getPlugin()).withLocalEcho(false)
-                .withEscapeSequence("exit").withEscapeSequence("triggers").withEscapeSequence("/npc path")
-                .withModality(false).withFirstPrompt(new TriggerEditPrompt(editor)).buildConversation(player);
+        final Conversation conversation = Conversation.builder(CitizensAPI.getPlugin()).localEcho(false)
+                .escapeSequence("exit").escapeSequence("triggers").escapeSequence("/npc path")
+                .modality(false).firstPrompt(new TriggerEditPrompt(editor)).build(player);
         conversation.begin();
         return conversation;
     }

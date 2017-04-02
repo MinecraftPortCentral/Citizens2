@@ -1,18 +1,23 @@
 package org.spongepowered.api.conv;
 
-public abstract class NumericPrompt implements Prompt {
+import org.apache.commons.lang3.math.NumberUtils;
 
-    public Prompt acceptInput(ConversationContext context, String input) {
-        // TODO Auto-generated method stub
-        return null;
+public abstract class NumericPrompt extends ValidatingPrompt {
+
+    @Override
+    protected boolean isInputValid(ConversationContext context, String input) {
+        return NumberUtils.isNumber(input);
     }
 
-    protected abstract Prompt acceptValidatedInput(ConversationContext context, Number input);
-
-    protected String getFailedValidationText(ConversationContext context, String input) {
-        return null;
+    @Override
+    protected Prompt acceptValidatedInput(ConversationContext context, String input) {
+        try {
+            return acceptValidatedInput(context, NumberUtils.createNumber(input));
+        } catch (NumberFormatException e) {
+            return acceptValidatedInput(context, 0);
+        }
     }
 
-    public abstract String getPromptText(ConversationContext context);
+    protected abstract Prompt acceptValidatedInput(ConversationContext context, Number createNumber);
 
 }

@@ -4,6 +4,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import net.citizensnpcs.api.util.Messaging;
 import net.citizensnpcs.util.Messages;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.conv.ConversationContext;
 import org.spongepowered.api.conv.Prompt;
@@ -32,7 +33,7 @@ public class TeleportTriggerPrompt extends RegexPrompt implements WaypointTrigge
         }
         String[] parts = Iterables.toArray(Splitter.on(':').split(input), String.class);
         String worldName = parts[0];
-        World world = Bukkit.getWorld(worldName);
+        World world = Sponge.getServer().getWorld(worldName).orElse(null);
         if (world == null) {
             Messaging.sendErrorTr((CommandSource) context.getForWhom(), Messages.WORLD_NOT_FOUND);
             return this;
