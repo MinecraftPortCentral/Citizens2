@@ -70,6 +70,8 @@ import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.plugin.PluginContainer;
 import org.spongepowered.api.service.ProviderRegistration;
 import org.spongepowered.api.service.economy.EconomyService;
+import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.format.TextColors;
 
 @Plugin(id = "citizens", name = "Citizens", version = "1.0.0", description = "This plugin is designed to add NPC's to the world.")
 public class Citizens implements CitizensPlugin {
@@ -400,38 +402,6 @@ public class Citizens implements CitizensPlugin {
         Translator.setInstance(new File(getDataFolder(), "lang"), locale);
     }
 
-    private void startMetrics() {
-        try {
-            Metrics metrics = new Metrics(Citizens.this);
-            if (metrics.isOptOut())
-                return;
-            metrics.addCustomData(new Metrics.Plotter("Total NPCs") {
-                @Override
-                public int getValue() {
-                    if (npcRegistry == null)
-                        return 0;
-                    return Iterables.size(npcRegistry);
-                }
-            });
-            metrics.addCustomData(new Metrics.Plotter("Total goals") {
-                @Override
-                public int getValue() {
-                    if (npcRegistry == null)
-                        return 0;
-                    int goalCount = 0;
-                    for (NPC npc : npcRegistry) {
-                        goalCount += Iterables.size(npc.getDefaultGoalController());
-                    }
-                    return goalCount;
-                }
-            });
-            traitFactory.addPlotters(metrics.createGraph("traits"));
-            metrics.start();
-        } catch (IOException e) {
-            Messaging.logTr(Messages.METRICS_ERROR_NOTIFICATION, e.getMessage());
-        }
-    }
-
     public void storeNPCs() {
         if (saves == null)
             return;
@@ -450,11 +420,11 @@ public class Citizens implements CitizensPlugin {
         }
     }
 
-    private boolean suggestClosestModifier(CommandSender sender, String command, String modifier) {
+    private boolean suggestClosestModifier(CommandSource sender, String command, String modifier) {
         String closest = commands.getClosestCommandModifier(command, modifier);
         if (!closest.isEmpty()) {
-            sender.sendMessage(ChatColor.GRAY + Messaging.tr(Messages.UNKNOWN_COMMAND));
-            sender.sendMessage(StringHelper.wrap(" /") + command + " " + StringHelper.wrap(closest));
+            sender.sendMessage(Text.of(TextColors.GRAY + Messaging.tr(Messages.UNKNOWN_COMMAND)));
+            sender.sendMessage(Text.of(StringHelper.wrap(" /") + command + " " + StringHelper.wrap(closest)));
             return true;
         }
         return false;

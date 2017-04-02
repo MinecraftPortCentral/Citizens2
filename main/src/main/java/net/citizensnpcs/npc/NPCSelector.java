@@ -13,39 +13,31 @@ import net.citizensnpcs.api.trait.trait.Owner;
 import net.citizensnpcs.api.util.Messaging;
 import net.citizensnpcs.editor.Editor;
 import net.citizensnpcs.util.Util;
-
-import org.bukkit.Bukkit;
-import org.bukkit.World;
-import org.bukkit.block.Block;
-import org.bukkit.command.BlockCommandSender;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.ConsoleCommandSender;
-import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.metadata.FixedMetadataValue;
-import org.bukkit.metadata.MetadataValue;
-import org.bukkit.metadata.Metadatable;
-import org.bukkit.plugin.Plugin;
-
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.command.source.ConsoleSource;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.plugin.PluginContainer;
+import org.spongepowered.api.world.World;
 import com.google.common.collect.Lists;
 
-public class NPCSelector implements Listener, net.citizensnpcs.api.npc.NPCSelector {
+public class NPCSelector implements net.citizensnpcs.api.npc.NPCSelector {
     private UUID consoleSelectedNPC;
-    private final Plugin plugin;
+    private final PluginContainer plugin;
 
-    public NPCSelector(Plugin plugin) {
+    public NPCSelector(PluginContainer plugin) {
         this.plugin = plugin;
-        Bukkit.getPluginManager().registerEvents(this, plugin);
+        Sponge.getEventManager().registerListeners(plugin, this);
     }
 
     @Override
-    public NPC getSelected(CommandSender sender) {
+    public NPC getSelected(CommandSource sender) {
         if (sender instanceof Player) {
             return getSelectedFromMetadatable((Player) sender);
         } else if (sender instanceof BlockCommandSender) {
             return getSelectedFromMetadatable(((BlockCommandSender) sender).getBlock());
-        } else if (sender instanceof ConsoleCommandSender) {
+        } else if (sender instanceof ConsoleSource) {
             if (consoleSelectedNPC == null)
                 return null;
             return CitizensAPI.getNPCRegistry().getByUniqueIdGlobal(consoleSelectedNPC);
@@ -60,7 +52,7 @@ public class NPCSelector implements Listener, net.citizensnpcs.api.npc.NPCSelect
         return CitizensAPI.getNPCRegistry().getByUniqueIdGlobal((UUID) metadata.get(0).value());
     }
 
-    @EventHandler
+    @Listener
     public void onNPCRemove(NPCRemoveEvent event) {
         NPC npc = event.getNPC();
         List<String> selectors = npc.data().get("selectors");
@@ -71,21 +63,21 @@ public class NPCSelector implements Listener, net.citizensnpcs.api.npc.NPCSelect
                 consoleSelectedNPC = null;
             } else if (value.startsWith("@")) {
                 String[] parts = value.substring(1, value.length()).split(":");
-                World world = Bukkit.getWorld(parts[0]);
+                World world = Sponge.getServer().getWorld(parts[0]).orElse(null);
                 if (world != null) {
                     Block block = world.getBlockAt(Integer.parseInt(parts[1]), Integer.parseInt(parts[2]),
                             Integer.parseInt(parts[3]));
                     removeMetadata(block);
                 }
             } else {
-                Player search = Bukkit.getPlayerExact(value);
+                Player search = Sponge.getServer().getPlayer(value).orElse(null);
                 removeMetadata(search);
             }
         }
         npc.data().remove("selectors");
     }
 
-    @EventHandler
+    @Listener
     public void onNPCRightClick(NPCRightClickEvent event) {
         Player player = event.getClicker();
         NPC npc = event.getNPC();
@@ -108,7 +100,7 @@ public class NPCSelector implements Listener, net.citizensnpcs.api.npc.NPCSelect
         }
     }
 
-    public void select(CommandSender sender, NPC npc) {
+    public void select(CommandSource sender, NPC npc) {
         // Remove existing selection if any
         List<String> selectors = npc.data().get("selectors");
         if (selectors == null) {
@@ -126,12 +118,12 @@ public class NPCSelector implements Listener, net.citizensnpcs.api.npc.NPCSelect
             Block block = ((BlockCommandSender) sender).getBlock();
             setMetadata(npc, block);
             selectors.add(toName(block));
-        } else if (sender instanceof ConsoleCommandSender) {
+        } else if (sender instanceof ConsoleSource) {
             consoleSelectedNPC = npc.getUniqueId();
             selectors.add("console");
         }
 
-        Bukkit.getPluginManager().callEvent(new NPCSelectEvent(npc, sender));
+        Sponge.getEventManager().post(new NPCSelectEvent(npc, sender));
     }
 
     private void setMetadata(NPC npc, Metadatable metadatable) {

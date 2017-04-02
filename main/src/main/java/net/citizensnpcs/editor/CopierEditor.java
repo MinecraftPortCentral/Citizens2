@@ -40,7 +40,7 @@ public class CopierEditor extends Editor {
 
         if (copy.isSpawned() && player.isOnline()) {
             Location<World> location = player.getLocation();
-            location.getChunk().load();
+            location.getExtent().loadChunk(location.getChunkPosition(), false);
             copy.teleport(location, TeleportCause.PLUGIN);
             copy.getTrait(CurrentLocation.class).setLocation(location);
         }

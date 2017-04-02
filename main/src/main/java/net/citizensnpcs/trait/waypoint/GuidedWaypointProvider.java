@@ -29,8 +29,16 @@ import net.citizensnpcs.api.util.prtree.SimplePointND;
 import net.citizensnpcs.trait.waypoint.WaypointProvider.EnumerableWaypointProvider;
 import net.citizensnpcs.util.Messages;
 import net.citizensnpcs.util.Util;
+import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.block.InteractBlockEvent;
+import org.spongepowered.api.event.entity.InteractEntityEvent;
+import org.spongepowered.api.event.filter.cause.First;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 public class GuidedWaypointProvider implements EnumerableWaypointProvider {
     private final List<Waypoint> available = Lists.newArrayList();
@@ -77,7 +85,7 @@ public class GuidedWaypointProvider implements EnumerableWaypointProvider {
                 markers.destroyWaypointMarkers();
             }
 
-            @EventHandler(ignoreCancelled = true)
+            @Listener
             public void onPlayerChat(AsyncPlayerChatEvent event) {
                 if (event.getMessage().equalsIgnoreCase("toggle path")) {
                     Bukkit.getScheduler().scheduleSyncDelayedTask(CitizensAPI.getPlugin(), new Runnable() {
@@ -99,16 +107,16 @@ public class GuidedWaypointProvider implements EnumerableWaypointProvider {
                 }
             }
 
-            @EventHandler(ignoreCancelled = true)
-            public void onPlayerInteract(PlayerInteractEvent event) {
-                if (!event.getPlayer().equals(player) || event.getAction() == Action.PHYSICAL
-                        || event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK
+            @Listener
+            public void onPlayerInteract(InteractBlockEvent event, @First Player eventPlayer) {
+                if (!eventPlayer.equals(player) || event.getTargetBlock().getState().getType() == BlockTypes.AIR 
+                        || event.getAction() == Action.RIGHT_CLICK_BLOCK
                         || event.getClickedBlock() == null || event.getHand() == EquipmentSlot.OFF_HAND)
                     return;
-                if (event.getPlayer().getWorld() != npc.getEntity().getWorld())
+                if (eventPlayer.getWorld() != npc.getEntity().getWorld())
                     return;
                 event.setCancelled(true);
-                Location at = event.getClickedBlock().getLocation();
+                Location<World> at = event.getClickedBlock().getLocation();
                 Waypoint element = new Waypoint(at);
                 if (player.isSneaking()) {
                     available.add(element);
@@ -121,8 +129,8 @@ public class GuidedWaypointProvider implements EnumerableWaypointProvider {
                 rebuildTree();
             }
 
-            @EventHandler(ignoreCancelled = true)
-            public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
+            @Listener
+            public void onPlayerInteractEntity(InteractEntityEvent event) {
                 if (!event.getRightClicked().hasMetadata("citizens.waypointhashcode")
                         || event.getHand() == EquipmentSlot.OFF_HAND)
                     return;

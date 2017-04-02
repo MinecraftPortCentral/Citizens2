@@ -8,10 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.bukkit.Bukkit;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 
@@ -29,6 +25,10 @@ import net.citizensnpcs.trait.ArmorStandTrait;
 import net.citizensnpcs.trait.LookClose;
 import net.citizensnpcs.trait.MountTrait;
 import net.citizensnpcs.util.NMS;
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.entity.EntityType;
+import org.spongepowered.api.entity.EntityTypes;
 
 public class CitizensNPCRegistry implements NPCRegistry {
     private final NPCCollection npcs = TROVE_EXISTS ? new TroveNPCCollection() : new MapNPCCollection();
@@ -52,8 +52,8 @@ public class CitizensNPCRegistry implements NPCRegistry {
         if (npc == null)
             throw new IllegalStateException("Could not create NPC.");
         npcs.put(npc.getId(), npc);
-        Bukkit.getPluginManager().callEvent(new NPCCreateEvent(npc));
-        if (type == EntityType.ARMOR_STAND && !npc.hasTrait(ArmorStandTrait.class)) {
+        Sponge.getEventManager().post(new NPCCreateEvent(npc));
+        if (type == EntityTypes.ARMOR_STAND && !npc.hasTrait(ArmorStandTrait.class)) {
             npc.addTrait(ArmorStandTrait.class);
         }
         if (Setting.DEFAULT_LOOK_CLOSE.asBoolean()) {

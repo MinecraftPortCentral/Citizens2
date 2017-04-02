@@ -10,7 +10,16 @@ import net.citizensnpcs.api.event.NPCCollisionEvent;
 import net.citizensnpcs.api.event.NPCPushEvent;
 import net.citizensnpcs.api.npc.NPC;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.data.property.entity.EyeLocationProperty;
+import org.spongepowered.api.data.type.HandTypes;
 import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.entity.EntityType;
+import org.spongepowered.api.entity.EntityTypes;
+import org.spongepowered.api.entity.living.Living;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.item.inventory.ItemStack;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 public class Util {
     // Static class for small (emphasis small) utility methods
@@ -46,29 +55,29 @@ public class Util {
     public static void faceEntity(Entity entity, Entity at) {
         if (at == null || entity == null || entity.getWorld() != at.getWorld())
             return;
-        if (at instanceof LivingEntity) {
+        if (at instanceof Living) {
             NMS.look(entity, at);
         } else {
-            faceLocation(entity, at.getLocation(AT_LOCATION));
+            faceLocation(entity, at.getLocation());
         }
     }
 
-    public static void faceLocation(Entity entity, Location to) {
+    public static void faceLocation(Entity entity, Location<World> to) {
         faceLocation(entity, to, false);
     }
 
-    public static void faceLocation(Entity entity, Location to, boolean headOnly) {
+    public static void faceLocation(Entity entity, Location<World> to, boolean headOnly) {
         faceLocation(entity, to, headOnly, true);
     }
 
-    public static void faceLocation(Entity entity, Location to, boolean headOnly, boolean immediate) {
-        if (to == null || entity.getWorld() != to.getWorld())
+    public static void faceLocation(Entity entity, Location<World> to, boolean headOnly, boolean immediate) {
+        if (to == null || entity.getWorld() != to.getExtent())
             return;
         NMS.look(entity, to, headOnly, immediate);
     }
 
-    public static Location getEyeLocation(Entity entity) {
-        return entity instanceof LivingEntity ? ((LivingEntity) entity).getEyeLocation() : entity.getLocation();
+    public static Location<World> getEyeLocation(Entity entity) {
+        return entity instanceof Living ? new Location<World>(entity.getWorld(), ((Living) entity).getProperty(EyeLocationProperty.class).get().getValue()) : entity.getLocation();
     }
 
     public static Random getFastRandom() {
@@ -76,43 +85,38 @@ public class Util {
     }
 
     public static String getMinecraftRevision() {
-        String raw = Bukkit.getServer().getClass().getPackage().getName();
+        String raw = Sponge.getPlatform().getMinecraftVersion().getName();
         return raw.substring(raw.lastIndexOf('.') + 2);
     }
 
     public static boolean isAlwaysFlyable(EntityType type) {
-        if (type.name().toLowerCase().contains("vex")) // 1.11 compatibility
+        if (type.getName().toLowerCase().contains("vex")) // 1.11 compatibility
             return true;
-        switch (type) {
-            case BAT:
-            case BLAZE:
-            case GHAST:
-            case ENDER_DRAGON:
-            case WITHER:
+        if (type == EntityTypes.BAT || type == EntityTypes.BLAZE || type == EntityTypes.GHAST
+                || type == EntityTypes.ENDER_DRAGON || type == EntityTypes.WITHER) {
                 return true;
-            default:
-                return false;
         }
+        return false;
     }
 
-    public static boolean isLoaded(Location location) {
-        if (location.getWorld() == null)
+    public static boolean isLoaded(Location<World> location) {
+        if (location.getExtent() == null)
             return false;
         int chunkX = location.getBlockX() >> 4;
         int chunkZ = location.getBlockZ() >> 4;
-        return location.getWorld().isChunkLoaded(chunkX, chunkZ);
+        return location.getExtent().getChunk(chunkX, 0, chunkZ).isPresent();
     }
 
     public static String listValuesPretty(Enum<?>[] values) {
         return "<e>" + Joiner.on("<a>, <e>").join(values).toLowerCase().replace('_', ' ');
     }
 
-    public static boolean locationWithinRange(Location current, Location target, double range) {
+    public static boolean locationWithinRange(Location<World> current, Location<World> target, double range) {
         if (current == null || target == null)
             return false;
-        if (current.getWorld() != target.getWorld())
+        if (current.getExtent() != target.getExtent())
             return false;
-        return current.distanceSquared(target) < Math.pow(range, 2);
+        return current.getPosition().distanceSquared(target.getPosition()) < Math.pow(range, 2);
     }
 
     public static EntityType matchEntityType(String toMatch) {
@@ -123,7 +127,7 @@ public class Util {
         toMatch = toMatch.toLowerCase().replace('-', '_').replace(' ', '_');
         for (T check : values) {
             if (toMatch.equals(check.name().toLowerCase())
-                    || (toMatch.equals("item") && check == EntityType.DROPPED_ITEM)) {
+                    || (toMatch.equals("item") && check == EntityTypes.ITEM)) {
                 return check; // check for an exact match first
             }
         }
@@ -141,7 +145,8 @@ public class Util {
         if (parts.contains("*"))
             return true;
         for (String part : Splitter.on(',').split(parts)) {
-            if (Material.matchMaterial(part) == player.getInventory().getItemInMainHand().getType()) {
+            ItemStack item = player.getItemInHand(HandTypes.MAIN_HAND).orElse(null);
+            if (item != null && item.getItem().getName().equalsIgnoreCase(part)) {
                 return true;
             }
         }
@@ -152,5 +157,5 @@ public class Util {
         return e.name().toLowerCase().replace('_', ' ');
     }
 
-    private static final Location AT_LOCATION = new Location(null, 0, 0, 0);
+    private static final Location<World> AT_LOCATION = new Location<World>(null, 0, 0, 0);
 }

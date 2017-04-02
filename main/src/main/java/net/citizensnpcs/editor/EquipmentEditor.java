@@ -2,18 +2,18 @@ package net.citizensnpcs.editor;
 
 import java.util.Map;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Player;
-import org.bukkit.event.Event.Result;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.inventory.ItemStack;
-
+import org.spongepowered.api.block.BlockTypes;
+import org.spongepowered.api.data.type.HandTypes;
+import org.spongepowered.api.entity.EntityType;
+import org.spongepowered.api.entity.EntityTypes;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.block.InteractBlockEvent;
+import org.spongepowered.api.event.entity.InteractEntityEvent;
+import org.spongepowered.api.event.filter.cause.First;
+import org.spongepowered.api.event.message.MessageChannelEvent;
+import org.spongepowered.api.item.inventory.ItemStack;
+import org.spongepowered.api.util.Tristate;
 import com.google.common.collect.Maps;
 
 import net.citizensnpcs.api.CitizensAPI;
@@ -42,15 +42,15 @@ public class EquipmentEditor extends Editor {
         Messaging.sendTr(player, Messages.EQUIPMENT_EDITOR_END);
     }
 
-    @EventHandler(ignoreCancelled = true)
-    public void onPlayerChat(final AsyncPlayerChatEvent event) {
+    @Listener
+    public void onPlayerChat(final MessageChannelEvent.Chat event, @First Player eventPlayer) {
         EquipmentSlot slot = null;
         if (event.getMessage().equals("helmet")
-                && event.getPlayer().hasPermission("citizens.npc.edit.equip.any-helmet")) {
+                && eventPlayer.hasPermission("citizens.npc.edit.equip.any-helmet")) {
             slot = EquipmentSlot.HELMET;
         }
         if (event.getMessage().equals("offhand")
-                && event.getPlayer().hasPermission("citizens.npc.edit.equip.offhand")) {
+                && eventPlayer.hasPermission("citizens.npc.edit.equip.offhand")) {
             slot = EquipmentSlot.OFF_HAND;
         }
         if (slot == null) {
@@ -60,36 +60,34 @@ public class EquipmentEditor extends Editor {
         Bukkit.getScheduler().scheduleSyncDelayedTask(CitizensAPI.getPlugin(), new Runnable() {
             @Override
             public void run() {
-                if (!event.getPlayer().isValid())
-                    return;
-                ItemStack hand = event.getPlayer().getInventory().getItemInMainHand();
-                if (hand.getType() == Material.AIR || hand.getAmount() <= 0) {
+                ItemStack hand = eventPlayer.getItemInHand(HandTypes.MAIN_HAND).orElse(null);
+                if (hand == null) {
                     return;
                 }
                 ItemStack old = npc.getTrait(Equipment.class).get(finalSlot);
                 if (old != null && old.getType() != Material.AIR) {
-                    event.getPlayer().getWorld().dropItemNaturally(event.getPlayer().getLocation(), old);
+                    eventPlayer.getWorld().dropItemNaturally(eventPlayer.getLocation(), old);
                 }
-                ItemStack newStack = hand.clone();
+                ItemStack newStack = hand.copy();
                 newStack.setAmount(1);
                 npc.getTrait(Equipment.class).set(finalSlot, newStack);
                 hand.setAmount(hand.getAmount() - 1);
-                event.getPlayer().getInventory().setItemInMainHand(hand);
+                eventPlayer.getInventory().setItemInMainHand(hand);
             }
         });
         event.setCancelled(true);
     }
 
-    @EventHandler
-    public void onPlayerInteract(PlayerInteractEvent event) {
-        if (event.getAction() == Action.RIGHT_CLICK_AIR && Editor.hasEditor(event.getPlayer())) {
-            event.setUseItemInHand(Result.DENY);
+    @Listener
+    public void onPlayerInteract(InteractBlockEvent.Secondary event, @First Player player) {
+        if (event.getTargetBlock().getState().getType() == BlockTypes.AIR && Editor.hasEditor(player)) {
+            event.setUseItemResult(Tristate.FALSE);
         }
     }
 
-    @EventHandler
-    public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
-        if (!npc.isSpawned() || !event.getPlayer().equals(player)
+    @Listener
+    public void onPlayerInteractEntity(InteractEntityEvent event, @First Player eventPlayer) {
+        if (!npc.isSpawned() || !eventPlayer.equals(this.player)
                 || event.getHand() != org.bukkit.inventory.EquipmentSlot.HAND
                 || !npc.equals(CitizensAPI.getNPCRegistry().getNPC(event.getRightClicked())))
             return;
@@ -98,23 +96,24 @@ public class EquipmentEditor extends Editor {
         if (equipper == null) {
             equipper = new GenericEquipper();
         }
-        equipper.equip(event.getPlayer(), npc);
+        equipper.equip(eventPlayer, npc);
         event.setCancelled(true);
     }
 
-    private static final Map<EntityType, Equipper> EQUIPPERS = Maps.newEnumMap(EntityType.class);
+    private static final Map<EntityType, Equipper> EQUIPPERS = Maps.newHashMap();
 
     static {
-        EQUIPPERS.put(EntityType.PIG, new PigEquipper());
-        EQUIPPERS.put(EntityType.SHEEP, new SheepEquipper());
-        EQUIPPERS.put(EntityType.ENDERMAN, new EndermanEquipper());
-        EQUIPPERS.put(EntityType.HORSE, new HorseEquipper());
+        EQUIPPERS.put(EntityTypes.PIG, new PigEquipper());
+        EQUIPPERS.put(EntityTypes.SHEEP, new SheepEquipper());
+        EQUIPPERS.put(EntityTypes.ENDERMAN, new EndermanEquipper());
+        EQUIPPERS.put(EntityTypes.HORSE, new HorseEquipper());
         try {
-            EQUIPPERS.put(EntityType.valueOf("ZOMBIE_HORSE"), new HorseEquipper());
+            // TODO
+            /*EQUIPPERS.put(EntityType.valueOf("ZOMBIE_HORSE"), new HorseEquipper());
             EQUIPPERS.put(EntityType.valueOf("LLAMA"), new HorseEquipper());
             EQUIPPERS.put(EntityType.valueOf("DONKEY"), new HorseEquipper());
             EQUIPPERS.put(EntityType.valueOf("MULE"), new HorseEquipper());
-            EQUIPPERS.put(EntityType.valueOf("SKELETON_HORSE"), new HorseEquipper());
+            EQUIPPERS.put(EntityType.valueOf("SKELETON_HORSE"), new HorseEquipper());*/
         } catch (IllegalArgumentException ex) {
         }
     }

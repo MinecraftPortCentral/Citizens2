@@ -140,20 +140,12 @@ public class Controllable extends Trait implements Toggleable, CommandConfigurab
     public void onPlayerInteract(InteractBlockEvent event) {
         if (!npc.isSpawned() || !enabled)
             return;
-        Action performed = event.getAction();
         if (NMS.getPassengers(npc.getEntity()).contains(npc.getEntity()))
             return;
-        switch (performed) {
-            case RIGHT_CLICK_BLOCK:
-            case RIGHT_CLICK_AIR:
-                controller.rightClick(event);
-                break;
-            case LEFT_CLICK_BLOCK:
-            case LEFT_CLICK_AIR:
-                controller.leftClick(event);
-                break;
-            default:
-                break;
+        if (event instanceof InteractBlockEvent.Secondary) {
+            controller.rightClick(event);
+        } else {
+            controller.leftClick(event);
         }
     }
 
@@ -184,7 +176,7 @@ public class Controllable extends Trait implements Toggleable, CommandConfigurab
         if (explicitType == null) {
             key.removeKey("explicittype");
         } else {
-            key.setString("explicittype", explicitType.name());
+            key.setString("explicittype", explicitType.getId());
         }
     }
 
@@ -237,12 +229,12 @@ public class Controllable extends Trait implements Toggleable, CommandConfigurab
             vel = vel.setX(dXcos * speed * 0.5).setZ(dXsin * speed * 0.5);
         }
         vel = vel.add(
-                new Vector(passenger.getVelocity().getX() * speedMod, 0D, passenger.getVelocity().getZ() * speedMod));
+                new Vector3d(passenger.getVelocity().getX() * speedMod, 0D, passenger.getVelocity().getZ() * speedMod));
 
         double newSpeed = Math.sqrt(vel.getX() * vel.getX() + vel.getZ() * vel.getZ());
         if (newSpeed > 0.35D) {
             double movementFactor = 0.35D / newSpeed;
-            vel = vel.multiply(new Vector(movementFactor, 1, movementFactor));
+            vel = vel.multiply(new Vector3d(movementFactor, 1, movementFactor));
             newSpeed = 0.35D;
         }
         handle.setVelocity(vel);

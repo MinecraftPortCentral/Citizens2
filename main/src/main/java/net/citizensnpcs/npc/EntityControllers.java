@@ -2,10 +2,9 @@ package net.citizensnpcs.npc;
 
 import java.util.Map;
 
-import org.bukkit.entity.EntityType;
-
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
+import org.spongepowered.api.entity.EntityType;
 
 public class EntityControllers {
     public static boolean controllerExistsForType(EntityType type) {
@@ -28,5 +27,5 @@ public class EntityControllers {
         TYPES.put(type, controller);
     }
 
-    private static final Map<EntityType, Class<? extends EntityController>> TYPES = Maps.newEnumMap(EntityType.class);
+    private static final Map<EntityType, Class<? extends EntityController>> TYPES =Maps.newHashMap();
 }
