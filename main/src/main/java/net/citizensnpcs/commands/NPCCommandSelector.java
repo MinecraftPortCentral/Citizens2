@@ -1,7 +1,6 @@
 package net.citizensnpcs.commands;
 
-import java.util.List;
-
+import com.google.common.collect.Lists;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.command.CommandContext;
 import net.citizensnpcs.api.command.CommandMessages;
@@ -15,9 +14,15 @@ import net.citizensnpcs.api.npc.NPCRegistry;
 import net.citizensnpcs.api.util.Messaging;
 import net.citizensnpcs.util.Messages;
 import net.citizensnpcs.util.Util;
-
 import org.spongepowered.api.command.CommandSource;
-import com.google.common.collect.Lists;
+import org.spongepowered.api.conv.Conversable;
+import org.spongepowered.api.conv.Conversation;
+import org.spongepowered.api.conv.ConversationContext;
+import org.spongepowered.api.conv.ConversationFactory;
+import org.spongepowered.api.conv.NumericPrompt;
+import org.spongepowered.api.conv.Prompt;
+
+import java.util.List;
 
 public class NPCCommandSelector extends NumericPrompt {
     private final Callback callback;

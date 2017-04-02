@@ -1,11 +1,14 @@
 package net.citizensnpcs.trait.waypoint.triggers;
 
-import java.util.List;
-
 import net.citizensnpcs.api.util.Messaging;
 import net.citizensnpcs.trait.waypoint.WaypointEditor;
 import net.citizensnpcs.util.Messages;
 import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.conv.ConversationContext;
+import org.spongepowered.api.conv.Prompt;
+import org.spongepowered.api.conv.StringPrompt;
+
+import java.util.List;
 
 public class TriggerRemovePrompt extends StringPrompt {
     private final WaypointEditor editor;

@@ -4,6 +4,9 @@ import net.citizensnpcs.api.util.Messaging;
 import net.citizensnpcs.util.Messages;
 import net.minecraft.util.text.TextFormatting;
 import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.conv.ConversationContext;
+import org.spongepowered.api.conv.Prompt;
+import org.spongepowered.api.conv.StringPrompt;
 
 public class TextEditPrompt extends StringPrompt {
     private final Text text;

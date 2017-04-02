@@ -3,6 +3,10 @@ package net.citizensnpcs.trait.text;
 import net.citizensnpcs.api.util.Messaging;
 import net.citizensnpcs.util.Messages;
 import net.minecraft.util.text.TextFormatting;
+import org.spongepowered.api.conv.ConversationContext;
+import org.spongepowered.api.conv.Prompt;
+import org.spongepowered.api.conv.StringPrompt;
+import org.spongepowered.api.entity.living.player.Player;
 
 public class TextAddPrompt extends StringPrompt {
     private final Text text;

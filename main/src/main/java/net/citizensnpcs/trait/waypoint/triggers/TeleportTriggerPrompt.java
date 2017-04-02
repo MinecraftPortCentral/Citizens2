@@ -1,15 +1,18 @@
 package net.citizensnpcs.trait.waypoint.triggers;
 
-import java.util.regex.Pattern;
-
+import com.google.common.base.Splitter;
+import com.google.common.collect.Iterables;
 import net.citizensnpcs.api.util.Messaging;
 import net.citizensnpcs.util.Messages;
 import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.conv.ConversationContext;
+import org.spongepowered.api.conv.Prompt;
+import org.spongepowered.api.conv.RegexPrompt;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
-import com.google.common.base.Splitter;
-import com.google.common.collect.Iterables;
+
+import java.util.regex.Pattern;
 
 public class TeleportTriggerPrompt extends RegexPrompt implements WaypointTriggerPrompt {
     public TeleportTriggerPrompt() {

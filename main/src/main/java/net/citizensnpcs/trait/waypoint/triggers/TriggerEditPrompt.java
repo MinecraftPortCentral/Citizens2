@@ -6,6 +6,12 @@ import net.citizensnpcs.trait.waypoint.Waypoint;
 import net.citizensnpcs.trait.waypoint.WaypointEditor;
 import net.citizensnpcs.util.Messages;
 import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.conv.Conversation;
+import org.spongepowered.api.conv.ConversationContext;
+import org.spongepowered.api.conv.ConversationFactory;
+import org.spongepowered.api.conv.Prompt;
+import org.spongepowered.api.conv.StringPrompt;
+import org.spongepowered.api.entity.living.player.Player;
 
 public class TriggerEditPrompt extends StringPrompt {
     private final WaypointEditor editor;

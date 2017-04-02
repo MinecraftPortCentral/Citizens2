@@ -1,15 +1,6 @@
 package net.citizensnpcs.trait.text;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-
 import com.google.common.collect.Maps;
-
 import net.citizensnpcs.Settings.Setting;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.ai.speech.SpeechContext;
@@ -24,17 +15,29 @@ import net.citizensnpcs.editor.Editor;
 import net.citizensnpcs.trait.Toggleable;
 import net.citizensnpcs.util.Messages;
 import net.citizensnpcs.util.Util;
+import org.spongepowered.api.conv.Conversation;
+import org.spongepowered.api.conv.ConversationAbandonedEvent;
+import org.spongepowered.api.conv.ConversationFactory;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.plugin.PluginContainer;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @TraitName("text")
 public class Text extends Trait implements Runnable, Toggleable {
     private final Map<UUID, Date> cooldowns = Maps.newHashMap();
     private int currentIndex;
     private String itemInHandPattern = "default";
-    private final Plugin plugin;
+    private final PluginContainer plugin;
     private boolean randomTalker = Setting.DEFAULT_RANDOM_TALKER.asBoolean();
     private double range = Setting.DEFAULT_TALK_CLOSE_RANGE.asDouble();
     private boolean realisticLooker = Setting.DEFAULT_REALISTIC_LOOKING.asBoolean();
@@ -50,7 +53,7 @@ public class Text extends Trait implements Runnable, Toggleable {
         text.add(string);
     }
 
-    @Override
+    @Listener
     public void conversationAbandoned(ConversationAbandonedEvent event) {
         Bukkit.dispatchCommand((Player) event.getContext().getForWhom(), "npc text");
     }
