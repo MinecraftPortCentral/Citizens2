@@ -10,6 +10,8 @@ import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.trait.trait.Equipment;
 import net.citizensnpcs.api.util.Messaging;
 import net.citizensnpcs.util.Messages;
+import net.minecraft.entity.monster.EntityEnderman;
+import net.minecraft.init.Blocks;
 
 public class EndermanEquipper implements Equipper {
     @Override
@@ -21,8 +23,8 @@ public class EndermanEquipper implements Equipper {
         }
 
         BlockType blockType = hand.getItem().getBlock().get();
-        MaterialData carried = ((Enderman) npc.getEntity()).getCarriedMaterial();
-        if (carried.getItemType() == BlockTypes.AIR) {
+        EntityEnderman enderman = ((net.minecraft.entity.monster.EntityEnderman) npc.getEntity());
+        if (enderman.getHeldBlockState().getBlock() == Blocks.AIR) {
             if (blockType == BlockTypes.AIR) {
                 Messaging.sendErrorTr(equipper, Messages.EQUIPMENT_EDITOR_INVALID_BLOCK);
                 return;

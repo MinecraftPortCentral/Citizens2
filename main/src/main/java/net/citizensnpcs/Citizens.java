@@ -76,6 +76,7 @@ import org.spongepowered.api.text.format.TextColors;
 @Plugin(id = "citizens", name = "Citizens", version = "1.0.0", description = "This plugin is designed to add NPC's to the world.")
 public class Citizens implements CitizensPlugin {
 
+    public static Citizens instance;
     @Inject public PluginContainer pluginContainer;
     @Inject private Logger logger;
     @Inject @ConfigDir(sharedRoot = false)
@@ -252,6 +253,7 @@ public class Citizens implements CitizensPlugin {
 
     @Listener(order = Order.LAST)
     public void onPreInit(GamePreInitializationEvent event) {
+        instance = this;
         pluginCause = Cause.of(NamedCause.source(this.pluginContainer));
         setupTranslator();
         CitizensAPI.setImplementation(this);
@@ -310,7 +312,7 @@ public class Citizens implements CitizensPlugin {
             Messaging.severeTr(Messages.LOAD_TASK_NOT_SCHEDULED);
             //getServer().getPluginManager().disablePlugin(this);
         }*/
-        Sponge.getGame().getScheduler().createTaskBuilder().delay(Setting.SAVE_TASK_DELAY.asInt(), TimeUnit.MINUTES).execute(new PlayerUpdateTask()).submit(this.pluginContainer);
+        Sponge.getGame().getScheduler().createTaskBuilder().delayTicks(Setting.SAVE_TASK_DELAY.asInt()).execute(new PlayerUpdateTask()).submit(this.pluginContainer);
     }
 
     public void registerCommandClass(Class<?> clazz) {
@@ -359,13 +361,13 @@ public class Citizens implements CitizensPlugin {
     }
 
     private void scheduleSaveTask(int delay) {
-        Bukkit.getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+        Sponge.getGame().getScheduler().createTaskBuilder().delayTicks(delay).execute(new Runnable() {
             @Override
             public void run() {
                 storeNPCs();
                 saves.saveToDisk();
             }
-        }, delay, delay);
+        }).submit(this);
     }
 
     private void setupEconomy() {

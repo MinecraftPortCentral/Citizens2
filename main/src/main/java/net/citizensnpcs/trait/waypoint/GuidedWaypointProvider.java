@@ -29,6 +29,7 @@ import net.citizensnpcs.api.util.prtree.SimplePointND;
 import net.citizensnpcs.trait.waypoint.WaypointProvider.EnumerableWaypointProvider;
 import net.citizensnpcs.util.Messages;
 import net.citizensnpcs.util.Util;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.Entity;
@@ -37,6 +38,7 @@ import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.entity.InteractEntityEvent;
 import org.spongepowered.api.event.filter.cause.First;
+import org.spongepowered.api.event.message.MessageChannelEvent;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
@@ -86,16 +88,16 @@ public class GuidedWaypointProvider implements EnumerableWaypointProvider {
             }
 
             @Listener
-            public void onPlayerChat(AsyncPlayerChatEvent event) {
+            public void onPlayerChat(MessageChannelEvent.Chat event) {
                 if (event.getMessage().equalsIgnoreCase("toggle path")) {
-                    Bukkit.getScheduler().scheduleSyncDelayedTask(CitizensAPI.getPlugin(), new Runnable() {
+                    Sponge.getGame().getScheduler().createTaskBuilder().execute(new Runnable() {
                         @Override
                         public void run() {
                             togglePath();
                         }
-                    });
+                    }).submit(CitizensAPI.getPlugin());
                 } else if (event.getMessage().equalsIgnoreCase("clear")) {
-                    Bukkit.getScheduler().scheduleSyncDelayedTask(CitizensAPI.getPlugin(), new Runnable() {
+                    Sponge.getGame().getScheduler().createTaskBuilder().execute(new Runnable() {
                         @Override
                         public void run() {
                             available.clear();
@@ -103,7 +105,7 @@ public class GuidedWaypointProvider implements EnumerableWaypointProvider {
                             if (showPath)
                                 markers.destroyWaypointMarkers();
                         }
-                    });
+                    }).submit(CitizensAPI.getPlugin());
                 }
             }
 

@@ -14,6 +14,7 @@ import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
+import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
@@ -106,7 +107,7 @@ public class SkinPacketTracker {
     public void onRemoveNPC() {
         isRemoved = true;
 
-        Collection<? extends Player> players = Bukkit.getOnlinePlayers();
+        Collection<? extends Player> players = Sponge.getServer().getOnlinePlayers();
 
         for (Player player : players) {
             if (player.hasMetadata("NPC"))
@@ -123,7 +124,7 @@ public class SkinPacketTracker {
      */
     public void onSpawnNPC() {
         isRemoved = false;
-        new BukkitRunnable() {
+        Sponge.getGame().getScheduler().createTaskBuilder().delayTicks(20).execute(new Runnable() {
             @Override
             public void run() {
                 if (!entity.getNPC().isSpawned())
@@ -132,21 +133,21 @@ public class SkinPacketTracker {
                 double viewDistance = Settings.Setting.NPC_SKIN_VIEW_DISTANCE.asDouble();
                 updateNearbyViewers(viewDistance);
             }
-        }.runTaskLater(CitizensAPI.getPlugin(), 20);
+        }).submit(CitizensAPI.getPlugin());
     }
 
     private void scheduleRemovePacket(final PlayerEntry entry) {
-        if (isRemoved || !CitizensAPI.hasImplementation() || !CitizensAPI.getPlugin().isEnabled())
+        if (isRemoved || !CitizensAPI.hasImplementation())
             return;
 
-        entry.removeTask = Bukkit.getScheduler().runTaskLater(CitizensAPI.getPlugin(), new Runnable() {
+        entry.removeTask = Sponge.getGame().getScheduler().createTaskBuilder().delayTicks(PACKET_DELAY_REMOVE).execute(new Runnable() {
             @Override
             public void run() {
                 if (shouldRemoveFromTabList()) {
                     TAB_LIST_REMOVER.sendPacket(entry.player, entity);
                 }
             }
-        }, PACKET_DELAY_REMOVE);
+        }).submit(CitizensAPI.getPlugin());
     }
 
     private void scheduleRemovePacket(PlayerEntry entry, int count) {
@@ -220,7 +221,7 @@ public class SkinPacketTracker {
     private class PlayerEntry {
         Player player;
         int removeCount;
-        BukkitTask removeTask;
+        Task removeTask;
 
         PlayerEntry(Player player) {
             this.player = player;
@@ -235,12 +236,12 @@ public class SkinPacketTracker {
         }
     }
 
-    private static class PlayerListener implements Listener {
+    private static class PlayerListener {
         @Listener
         private void onPlayerQuit(ClientConnectionEvent.Disconnect event) {
             // this also causes any entries in the "inProgress" field to
             // be removed.
-            TAB_LIST_REMOVER.cancelPackets(event.getPlayer());
+            TAB_LIST_REMOVER.cancelPackets(event.getTargetEntity());
         }
     }
 

@@ -14,6 +14,7 @@ import net.citizensnpcs.api.scripting.ScriptFactory;
 import net.citizensnpcs.api.trait.Trait;
 import net.citizensnpcs.api.trait.TraitName;
 import net.citizensnpcs.api.util.DataKey;
+import org.spongepowered.api.Sponge;
 
 @TraitName("scripttrait")
 public class ScriptTrait extends Trait {
@@ -48,12 +49,12 @@ public class ScriptTrait extends Trait {
     }
 
     public void loadScript(final String file) {
-        File f = new File(JavaPlugin.getPlugin(Citizens.class).getScriptFolder(), file);
+        File f = new File(CitizensAPI.getPlugin().getScriptFolder(), file);
         CitizensAPI.getScriptCompiler().compile(f).cache(true).withCallback(new CompileCallback() {
             @Override
             public void onScriptCompiled(String sourceDescriptor, ScriptFactory compiled) {
                 final Script newInstance = compiled.newInstance();
-                Bukkit.getScheduler().scheduleSyncDelayedTask(CitizensAPI.getPlugin(), new Runnable() {
+                Sponge.getGame().getScheduler().createTaskBuilder().execute(new Runnable() {
                     @Override
                     public void run() {
                         try {
@@ -65,7 +66,7 @@ public class ScriptTrait extends Trait {
                         }
                         runnableScripts.add(new RunnableScript(newInstance, file));
                     }
-                });
+                }).submit(CitizensAPI.getPlugin());
             }
         }).beginWithFuture();
     }
@@ -97,8 +98,8 @@ public class ScriptTrait extends Trait {
     }
 
     public boolean validateFile(String file) {
-        File f = new File(JavaPlugin.getPlugin(Citizens.class).getScriptFolder(), file);
-        if (!f.exists() || !f.getParentFile().equals(JavaPlugin.getPlugin(Citizens.class).getScriptFolder())) {
+        File f = new File(CitizensAPI.getPlugin().getScriptFolder(), file);
+        if (!f.exists() || !f.getParentFile().equals(CitizensAPI.getPlugin().getScriptFolder())) {
             return false;
         }
         return CitizensAPI.getScriptCompiler().canCompile(f);

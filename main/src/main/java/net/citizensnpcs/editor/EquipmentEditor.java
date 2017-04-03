@@ -2,6 +2,7 @@ package net.citizensnpcs.editor;
 
 import java.util.Map;
 
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.data.type.HandTypes;
 import org.spongepowered.api.entity.EntityType;
@@ -15,7 +16,7 @@ import org.spongepowered.api.event.message.MessageChannelEvent;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.util.Tristate;
 import com.google.common.collect.Maps;
-
+import net.citizensnpcs.Citizens;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.trait.trait.Equipment;
@@ -57,7 +58,7 @@ public class EquipmentEditor extends Editor {
             return;
         }
         final EquipmentSlot finalSlot = slot;
-        Bukkit.getScheduler().scheduleSyncDelayedTask(CitizensAPI.getPlugin(), new Runnable() {
+        Sponge.getGame().getScheduler().createTaskBuilder().execute(new Runnable() {
             @Override
             public void run() {
                 ItemStack hand = eventPlayer.getItemInHand(HandTypes.MAIN_HAND).orElse(null);
@@ -65,16 +66,16 @@ public class EquipmentEditor extends Editor {
                     return;
                 }
                 ItemStack old = npc.getTrait(Equipment.class).get(finalSlot);
-                if (old != null && old.getType() != Material.AIR) {
+                if (old != null && old.getType() != BlockTypes.AIR) {
                     eventPlayer.getWorld().dropItemNaturally(eventPlayer.getLocation(), old);
                 }
                 ItemStack newStack = hand.copy();
                 newStack.setAmount(1);
                 npc.getTrait(Equipment.class).set(finalSlot, newStack);
                 hand.setAmount(hand.getAmount() - 1);
-                eventPlayer.getInventory().setItemInMainHand(hand);
+                eventPlayer.setItemInHand(HandTypes.MAIN_HAND, hand);
             }
-        });
+        }).submit(CitizensAPI.getPlugin());
         event.setCancelled(true);
     }
 

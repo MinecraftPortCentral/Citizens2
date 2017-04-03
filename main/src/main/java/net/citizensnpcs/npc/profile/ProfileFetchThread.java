@@ -12,6 +12,7 @@ import javax.annotation.Nullable;
 import com.google.common.base.Preconditions;
 
 import net.citizensnpcs.api.CitizensAPI;
+import org.spongepowered.api.Sponge;
 
 /**
  * Thread used to fetch profiles from the Mojang servers.
@@ -120,20 +121,20 @@ class ProfileFetchThread implements Runnable {
     }
 
     private static void addHandler(final ProfileRequest request, final ProfileFetchHandler handler) {
-        Bukkit.getScheduler().scheduleSyncDelayedTask(CitizensAPI.getPlugin(), new Runnable() {
+        Sponge.getGame().getScheduler().createTaskBuilder().delayTicks(1).execute(new Runnable() {
             @Override
             public void run() {
                 request.addHandler(handler);
             }
-        }, 1);
+        }).submit(CitizensAPI.getPlugin());
     }
 
     private static void sendResult(final ProfileFetchHandler handler, final ProfileRequest request) {
-        Bukkit.getScheduler().scheduleSyncDelayedTask(CitizensAPI.getPlugin(), new Runnable() {
+        Sponge.getGame().getScheduler().createTaskBuilder().delayTicks(1).execute(new Runnable() {
             @Override
             public void run() {
                 handler.onResult(request);
             }
-        }, 1);
+        }).submit(CitizensAPI.getPlugin());
     }
 }

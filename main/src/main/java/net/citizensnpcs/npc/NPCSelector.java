@@ -15,6 +15,7 @@ import net.citizensnpcs.editor.Editor;
 import net.citizensnpcs.util.Util;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.command.source.CommandBlockSource;
 import org.spongepowered.api.command.source.ConsoleSource;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
@@ -35,8 +36,8 @@ public class NPCSelector implements net.citizensnpcs.api.npc.NPCSelector {
     public NPC getSelected(CommandSource sender) {
         if (sender instanceof Player) {
             return getSelectedFromMetadatable((Player) sender);
-        } else if (sender instanceof BlockCommandSender) {
-            return getSelectedFromMetadatable(((BlockCommandSender) sender).getBlock());
+        } else if (sender instanceof CommandBlockSource) {
+            return getSelectedFromMetadatable(((CommandBlockSource) sender).getBlock());
         } else if (sender instanceof ConsoleSource) {
             if (consoleSelectedNPC == null)
                 return null;
@@ -114,8 +115,8 @@ public class NPCSelector implements net.citizensnpcs.api.npc.NPCSelector {
 
             // Remove editor if the player has one
             Editor.leave(player);
-        } else if (sender instanceof BlockCommandSender) {
-            Block block = ((BlockCommandSender) sender).getBlock();
+        } else if (sender instanceof CommandBlockSource) {
+            Block block = ((CommandBlockSource) sender).getBlock();
             setMetadata(npc, block);
             selectors.add(toName(block));
         } else if (sender instanceof ConsoleSource) {

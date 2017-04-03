@@ -22,6 +22,8 @@ import net.citizensnpcs.api.util.Messaging;
 import net.citizensnpcs.npc.profile.ProfileFetchHandler;
 import net.citizensnpcs.npc.profile.ProfileFetcher;
 import net.citizensnpcs.npc.profile.ProfileRequest;
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.scheduler.Task;
 
 /**
  * Stores data for a single skin.
@@ -31,7 +33,7 @@ public class Skin {
     private boolean hasFetched;
     private volatile boolean isValid = true;
     private final Map<SkinnableEntity, Void> pending = new WeakHashMap<SkinnableEntity, Void>(15);
-    private BukkitTask retryTask;
+    private Task retryTask;
     private volatile Property skinData;
     private volatile UUID skinId;
     private final String skinName;
@@ -149,12 +151,12 @@ public class Skin {
                         }
                         fetchRetries++;
                         long delay = Setting.NPC_SKIN_RETRY_DELAY.asLong();
-                        retryTask = Bukkit.getScheduler().runTaskLater(CitizensAPI.getPlugin(), new Runnable() {
+                        retryTask = Sponge.getGame().getScheduler().createTaskBuilder().delayTicks(delay).execute(new Runnable() {
                             @Override
                             public void run() {
                                 fetch();
                             }
-                        }, delay);
+                        }).submit(CitizensAPI.getPlugin());
 
                         if (Messaging.isDebugging()) {
                             Messaging.debug("Retrying skin fetch for '" + skinName + "' in " + delay + " ticks.");
@@ -195,12 +197,12 @@ public class Skin {
                         }
                         fetchRetries++;
                         long delay = Setting.NPC_SKIN_RETRY_DELAY.asLong();
-                        retryTask = Bukkit.getScheduler().runTaskLater(CitizensAPI.getPlugin(), new Runnable() {
+                        retryTask = Sponge.getGame().getScheduler().createTaskBuilder().delayTicks(delay).execute(new Runnable() {
                             @Override
                             public void run() {
                                 fetchForced();
                             }
-                        }, delay);
+                        }).submit(CitizensAPI.getPlugin());
 
                         if (Messaging.isDebugging()) {
                             Messaging.debug("Retrying skin fetch for '" + skinName + "' in " + delay + " ticks.");

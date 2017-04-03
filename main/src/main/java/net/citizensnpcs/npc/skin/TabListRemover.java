@@ -28,7 +28,7 @@ public class TabListRemover {
     private final Map<UUID, PlayerEntry> pending = new HashMap<UUID, PlayerEntry>(Sponge.getServer().getMaxPlayers() / 2);
 
     TabListRemover() {
-        Bukkit.getScheduler().runTaskTimer(CitizensAPI.getPlugin(), new Sender(), 2, 2);
+        Sponge.getGame().getScheduler().createTaskBuilder().delayTicks(2).intervalTicks(2).execute(new Sender()).submit(CitizensAPI.getPlugin());
     }
 
     /**

@@ -35,6 +35,7 @@ import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.EntityType;
 import org.spongepowered.api.entity.living.Living;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.scoreboard.Team;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
@@ -280,8 +281,8 @@ public class CitizensNPC extends AbstractNPC {
                     }
                     String teamName = data().get(NPC.SCOREBOARD_FAKE_TEAM_NAME_METADATA, "");
                     if (getEntity() instanceof Player && teamName.length() > 0
-                            && Bukkit.getScoreboardManager().getMainScoreboard().getTeam(teamName) != null) {
-                        Team team = Bukkit.getScoreboardManager().getMainScoreboard().getTeam(teamName);
+                            && Sponge.getServer().getServerScoreboard().get().getTeam(teamName).isPresent()) {
+                        Team team = Sponge.getServer().getServerScoreboard().get().getTeam(teamName).get();
                         if (!Setting.USE_SCOREBOARD_TEAMS.asBoolean()) {
                             team.unregister();
                             data().remove(NPC.SCOREBOARD_FAKE_TEAM_NAME_METADATA);

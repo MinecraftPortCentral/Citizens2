@@ -26,6 +26,8 @@ import net.citizensnpcs.trait.waypoint.WaypointProvider.EnumerableWaypointProvid
 import net.citizensnpcs.trait.waypoint.triggers.TriggerEditPrompt;
 import net.citizensnpcs.util.Messages;
 import net.citizensnpcs.util.Util;
+import net.minecraft.util.text.TextFormatting;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.conv.Conversation;
 import org.spongepowered.api.entity.living.player.Player;
@@ -33,6 +35,8 @@ import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.entity.InteractEntityEvent;
 import org.spongepowered.api.event.filter.IsCancelled;
+import org.spongepowered.api.event.filter.cause.First;
+import org.spongepowered.api.event.message.MessageChannelEvent;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
@@ -223,58 +227,58 @@ public class LinearWaypointProvider implements EnumerableWaypointProvider {
             }
         }
 
-        @Listener(ignoreCancelled = true)
-        public void onPlayerChat(AsyncPlayerChatEvent event) {
+        @Listener
+        public void onPlayerChat(MessageChannelEvent.Chat event) {
             if (!event.getPlayer().equals(player))
                 return;
             String message = event.getMessage();
             if (message.equalsIgnoreCase("triggers")) {
                 event.setCancelled(true);
-                Bukkit.getScheduler().scheduleSyncDelayedTask(CitizensAPI.getPlugin(), new Runnable() {
+                Sponge.getGame().getScheduler().createTaskBuilder().execute(new Runnable() {
                     @Override
                     public void run() {
                         conversation = TriggerEditPrompt.start(player, LinearWaypointEditor.this);
                     }
-                });
+                }).submit(CitizensAPI.getPlugin());
             } else if (message.equalsIgnoreCase("clear")) {
                 event.setCancelled(true);
-                Bukkit.getScheduler().scheduleSyncDelayedTask(CitizensAPI.getPlugin(), new Runnable() {
+                Sponge.getGame().getScheduler().createTaskBuilder().execute(new Runnable() {
                     @Override
                     public void run() {
                         clearWaypoints();
                     }
-                });
+                }).submit(CitizensAPI.getPlugin());
             } else if (message.equalsIgnoreCase("toggle path")) {
                 event.setCancelled(true);
-                Bukkit.getScheduler().scheduleSyncDelayedTask(CitizensAPI.getPlugin(), new Runnable() {
+                Sponge.getGame().getScheduler().createTaskBuilder().execute(new Runnable() {
                     @Override
                     public void run() {
                         // we need to spawn entities on the main thread.
                         togglePath();
                     }
-                });
+                }).submit(CitizensAPI.getPlugin());
             }
         }
 
         @Listener
-        public void onPlayerInteract(InteractBlockEvent event) {
-            if (!event.getPlayer().equals(player) || event.getAction() == Action.PHYSICAL || !npc.isSpawned()
-                    || event.getPlayer().getWorld() != npc.getEntity().getWorld()
+        public void onPlayerInteract(InteractBlockEvent event, @First Player eventPlayer) {
+            if (!eventPlayer.equals(player) || event.getAction() == Action.PHYSICAL || !npc.isSpawned()
+                    || eventPlayer.getWorld() != npc.getEntity().getWorld()
                     || event.getHand() == EquipmentSlot.OFF_HAND)
                 return;
             if (event.getAction() == Action.LEFT_CLICK_BLOCK || event.getAction() == Action.LEFT_CLICK_AIR) {
                 if (event.getClickedBlock() == null)
                     return;
                 event.setCancelled(true);
-                Location at = event.getClickedBlock().getLocation();
-                Location prev = getPreviousWaypoint(editingSlot);
+                Location<World> at = event.getClickedBlock().getLocation();
+                Location<World> prev = getPreviousWaypoint(editingSlot);
 
                 if (prev != null) {
-                    double distance = at.distanceSquared(prev);
+                    double distance = at.getPosition().distanceSquared(prev.getPosition());
                     double maxDistance = Math.pow(npc.getNavigator().getDefaultParameters().range(), 2);
                     if (distance > maxDistance) {
                         Messaging.sendErrorTr(player, Messages.LINEAR_WAYPOINT_EDITOR_RANGE_EXCEEDED,
-                                Math.sqrt(distance), Math.sqrt(maxDistance), ChatColor.RED);
+                                Math.sqrt(distance), Math.sqrt(maxDistance), TextFormatting.RED);
                         return;
                     }
                 }
@@ -377,7 +381,7 @@ public class LinearWaypointProvider implements EnumerableWaypointProvider {
         private Iterator<Waypoint> getNewIterator() {
             LinearWaypointsCompleteEvent event = new LinearWaypointsCompleteEvent(LinearWaypointProvider.this,
                     getUnsafeIterator());
-            Bukkit.getPluginManager().callEvent(event);
+            Sponge.getEventManager().post(event);
             Iterator<Waypoint> next = event.getNextWaypoints();
             return next;
         }

@@ -15,6 +15,7 @@ import net.citizensnpcs.editor.Editor;
 import net.citizensnpcs.trait.Toggleable;
 import net.citizensnpcs.util.Messages;
 import net.citizensnpcs.util.Util;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.conv.Conversation;
 import org.spongepowered.api.conv.ConversationAbandonedEvent;
 import org.spongepowered.api.entity.Entity;
@@ -24,6 +25,7 @@ import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.plugin.PluginContainer;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -53,7 +55,7 @@ public class Text extends Trait implements Runnable, Toggleable {
     }
 
     public void conversationAbandoned(ConversationAbandonedEvent event) {
-        Bukkit.dispatchCommand((Player) event.getContext().getForWhom(), "npc text");
+        Sponge.getCommandManager().process((Player) event.getContext().getForWhom(), "npc text");
     }
 
     void edit(int index, String newText) {
@@ -126,7 +128,7 @@ public class Text extends Trait implements Runnable, Toggleable {
     public void run() {
         if (!talkClose || !npc.isSpawned())
             return;
-        List<Entity> nearby = npc.getEntity().getNearbyEntities(range);
+        Collection<Entity> nearby = npc.getEntity().getNearbyEntities(range);
         for (Entity search : nearby) {
             if (!(search instanceof Player) || ((Player) search).getGameMode() == GameModes.SPECTATOR)
                 continue;

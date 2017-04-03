@@ -48,9 +48,17 @@ import net.citizensnpcs.trait.CurrentLocation;
 import net.citizensnpcs.util.Messages;
 import net.citizensnpcs.util.NMS;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.entity.EntityTypes;
+import org.spongepowered.api.entity.living.animal.Horse;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.entity.projectile.FishHook;
+import org.spongepowered.api.entity.vehicle.minecart.Minecart;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.Order;
+import org.spongepowered.api.event.cause.entity.damage.source.BlockDamageSource;
+import org.spongepowered.api.event.cause.entity.damage.source.DamageSource;
+import org.spongepowered.api.event.cause.entity.damage.source.EntityDamageSource;
+import org.spongepowered.api.event.entity.CollideEntityEvent;
 import org.spongepowered.api.event.entity.DamageEntityEvent;
 import org.spongepowered.api.event.entity.DestructEntityEvent;
 import org.spongepowered.api.event.entity.MoveEntityEvent;
@@ -62,6 +70,7 @@ import org.spongepowered.api.event.world.LoadWorldEvent;
 import org.spongepowered.api.event.world.UnloadWorldEvent;
 import org.spongepowered.api.event.world.chunk.LoadChunkEvent;
 import org.spongepowered.api.event.world.chunk.UnloadChunkEvent;
+import org.spongepowered.api.scoreboard.Team;
 import org.spongepowered.api.world.Chunk;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
@@ -117,15 +126,17 @@ public class EventListen {
     public void onChunkUnload(UnloadChunkEvent event) {
         ChunkCoord coord = toCoord(event.getTargetChunk());
         Location<World> loc = new Location<World>(null, 0, 0, 0);
+        final Chunk chunk = event.getTargetChunk();
         for (NPC npc : getAllNPCs()) {
             if (npc == null || !npc.isSpawned())
                 continue;
             loc = npc.getEntity().getLocation();
             boolean sameChunkCoordinates = coord.z == loc.getBlockZ() >> 4 && coord.x == loc.getBlockX() >> 4;
-            if (!sameChunkCoordinates || !event.getWorld().equals(loc.getWorld()))
+            if (!sameChunkCoordinates || !chunk.getWorld().equals(loc.getExtent()))
                 continue;
             if (!npc.despawn(DespawnReason.CHUNK_UNLOAD)) {
-                event.setCancelled(true);
+                //event.setCancelled(true);
+                ((net.minecraft.world.chunk.Chunk) chunk).unloaded = false;
                 if (Messaging.isDebugging()) {
                     Messaging.debug("Cancelled chunk unload at [" + coord.x + "," + coord.z + "]");
                 }
@@ -155,38 +166,39 @@ public class EventListen {
      * Entity events
      */
     @Listener
-    public void onEntityCombust(EntityCombustEvent event) {
-        NPC npc = npcRegistry.getNPC(event.getEntity());
+    public void onEntityCombust(DamageEntityEvent event, @First DamageSource source) {
+        NPC npc = npcRegistry.getNPC(event.getTargetEntity());
         if (npc == null)
             return;
         event.setCancelled(npc.data().get(NPC.DEFAULT_PROTECTED_METADATA, true));
-        if (event instanceof EntityCombustByEntityEvent) {
-            Bukkit.getPluginManager().callEvent(new NPCCombustByEntityEvent((EntityCombustByEntityEvent) event, npc));
-        } else if (event instanceof EntityCombustByBlockEvent) {
-            Bukkit.getPluginManager().callEvent(new NPCCombustByBlockEvent((EntityCombustByBlockEvent) event, npc));
+        if (source instanceof EntityDamageSource) {
+            Sponge.getEventManager().post(new NPCCombustByEntityEvent((EntityDamageSource) source, npc));
+        } else if (source instanceof BlockDamageSource) {
+            Sponge.getEventManager().post(new NPCCombustByBlockEvent((BlockDamageSource) source, npc));
         } else {
-            Bukkit.getPluginManager().callEvent(new NPCCombustEvent(event, npc));
+            Sponge.getEventManager().post(new NPCCombustEvent(source, npc));
         }
     }
 
     @Listener
-    public void onEntityDamage(DamageEntityEvent event) {
-        NPC npc = npcRegistry.getNPC(event.getEntity());
+    public void onEntityDamage(DamageEntityEvent event, @First DamageSource source) {
+        NPC npc = npcRegistry.getNPC(event.getTargetEntity());
 
         if (npc == null) {
-            if (event instanceof EntityDamageByEntityEvent) {
-                npc = npcRegistry.getNPC(((EntityDamageByEntityEvent) event).getDamager());
+            if (source instanceof EntityDamageSource) {
+                npc = npcRegistry.getNPC(((EntityDamageSource) source).getSource());
                 if (npc == null)
                     return;
                 event.setCancelled(!npc.data().get(NPC.DAMAGE_OTHERS_METADATA, true));
-                NPCDamageEntityEvent damageEvent = new NPCDamageEntityEvent(npc, (EntityDamageByEntityEvent) event);
-                Bukkit.getPluginManager().callEvent(damageEvent);
+                NPCDamageEntityEvent damageEvent = new NPCDamageEntityEvent(npc, (EntityDamageSource) source);
+                damageEvent.setCancelled(event.isCancelled());
+                Sponge.getEventManager().post(damageEvent);
             }
             return;
         }
         event.setCancelled(npc.data().get(NPC.DEFAULT_PROTECTED_METADATA, true));
-        if (event instanceof EntityDamageByEntityEvent) {
-            NPCDamageByEntityEvent damageEvent = new NPCDamageByEntityEvent(npc, (EntityDamageByEntityEvent) event);
+        if (source instanceof EntityDamageSource) {
+            NPCDamageByEntityEvent damageEvent = new NPCDamageByEntityEvent(npc, (EntityDamageSource) source);
             Sponge.getEventManager().post(damageEvent);
 
             if (!damageEvent.isCancelled() || !(damageEvent.getDamager() instanceof Player))
@@ -213,13 +225,13 @@ public class EventListen {
             event.getDrops().clear();
         }
 
-        final Location location = npc.getEntity().getLocation();
-        Bukkit.getPluginManager().callEvent(new NPCDeathEvent(npc, event));
+        final Location<World> location = npc.getEntity().getLocation();
+        Sponge.getEventManager().post(new NPCDeathEvent(npc, event));
         npc.despawn(DespawnReason.DEATH);
 
         if (npc.data().has(NPC.SCOREBOARD_FAKE_TEAM_NAME_METADATA)) {
             String teamName = npc.data().get(NPC.SCOREBOARD_FAKE_TEAM_NAME_METADATA);
-            Team team = Bukkit.getScoreboardManager().getMainScoreboard().getTeam(teamName);
+            Team team = Sponge.getServer().getServerScoreboard().get().getTeam(teamName).orElse(null);
             if (team != null) {
                 team.unregister();
             }
@@ -229,14 +241,14 @@ public class EventListen {
 
         if (npc.data().get(NPC.RESPAWN_DELAY_METADATA, -1) >= 0) {
             int delay = npc.data().get(NPC.RESPAWN_DELAY_METADATA, -1);
-            Bukkit.getScheduler().scheduleSyncDelayedTask(CitizensAPI.getPlugin(), new Runnable() {
+            Sponge.getGame().getScheduler().createTaskBuilder().delayTicks(delay + 2).execute(new Runnable() {
                 @Override
                 public void run() {
                     if (!npc.isSpawned() && npc.getOwningRegistry().getByUniqueId(npc.getUniqueId()) == npc) {
                         npc.spawn(location);
                     }
                 }
-            }, delay + 2);
+            }).submit(CitizensAPI.getPlugin());
         }
     }
 
@@ -429,29 +441,29 @@ public class EventListen {
     }
 
     @Listener
-    public void onPlayerTeleport(final MoveEntityEvent.Teleport event) {
+    public void onPlayerTeleport(final MoveEntityEvent.Teleport event, @First Player player) {
         if (event.getCause() == TeleportCause.PLUGIN && !event.getTargetEntity().hasMetadata("citizens-force-teleporting")
-                && npcRegistry.getNPC(event.getPlayer()) != null && Setting.TELEPORT_DELAY.asInt() > 0) {
+                && npcRegistry.getNPC(Setting.TELEPORT_DELAY.asInt() > 0)) {
             event.setCancelled(true);
-            Bukkit.getScheduler().scheduleSyncDelayedTask(CitizensAPI.getPlugin(), new Runnable() {
+            Sponge.getGame().getScheduler().createTaskBuilder().delayTicks(Setting.TELEPORT_DELAY.asInt()).execute(new Runnable() {
                 @Override
                 public void run() {
-                    event.getPlayer().setMetadata("citizens-force-teleporting",
+                    player.setMetadata("citizens-force-teleporting",
                             new FixedMetadataValue(CitizensAPI.getPlugin(), true));
-                    event.getPlayer().teleport(event.getTo());
-                    event.getPlayer().removeMetadata("citizens-force-teleporting", CitizensAPI.getPlugin());
+                    player.teleport(event.getTo());
+                    player.removeMetadata("citizens-force-teleporting", CitizensAPI.getPlugin());
                 }
-            }, Setting.TELEPORT_DELAY.asInt());
+            }).submit(CitizensAPI.getPlugin());
         }
-        skinUpdateTracker.updatePlayer(event.getPlayer(), 15, true);
+        skinUpdateTracker.updatePlayer(player, 15, true);
     }
 
     @Listener
-    public void onProjectileHit(final ProjectileHitEvent event) {
+    public void onProjectileHit(final CollideEntityEvent.Impact event) {
         if (!(event.getEntity() instanceof FishHook))
             return;
         NMS.removeHookIfNecessary(npcRegistry, (FishHook) event.getEntity());
-        new BukkitRunnable() {
+        Sponge.getGame().getScheduler().createTaskBuilder().interval(1, unit).execute(new Runnable() {
             int n = 0;
 
             @Override
@@ -461,11 +473,11 @@ public class EventListen {
                 }
                 NMS.removeHookIfNecessary(npcRegistry, (FishHook) event.getEntity());
             }
-        }.runTaskTimer(CitizensAPI.getPlugin(), 0, 1);
+        }).submit(CitizensAPI.getPlugin());
     }
 
     @Listener
-    public void onVehicleDestroy(VehicleDestroyEvent event) {
+    public void onVehicleDestroy(DestructEntityEvent event) {
         NPC npc = npcRegistry.getNPC(event.getVehicle());
         if (npc == null) {
             return;
@@ -474,11 +486,11 @@ public class EventListen {
     }
 
     @Listener
-    public void onVehicleEnter(VehicleEnterEvent event) {
+    public void onVehicleEnter(MoveEntityEvent event) {
         if (!npcRegistry.isNPC(event.getEntered()))
             return;
         NPC npc = npcRegistry.getNPC(event.getEntered());
-        if ((npc.getEntity() instanceof AbstractHorse || npc.getEntity().getType() == EntityType.BOAT
+        if ((npc.getEntity() instanceof Horse || npc.getEntity().getType() == EntityTypes.BOAT
                 || npc.getEntity() instanceof Minecart) && !npc.getTrait(Controllable.class).isEnabled()) {
             event.setCancelled(true);
         }

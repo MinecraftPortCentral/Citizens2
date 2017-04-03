@@ -8,8 +8,15 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.command.source.CommandBlockSource;
+import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.entity.EntityTypes;
 import org.spongepowered.api.entity.living.Ageable;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
@@ -27,6 +34,7 @@ import net.citizensnpcs.api.command.exception.CommandException;
 import net.citizensnpcs.api.command.exception.NoPermissionsException;
 import net.citizensnpcs.api.command.exception.ServerCommandException;
 import net.citizensnpcs.api.event.CommandSenderCreateNPCEvent;
+import net.citizensnpcs.api.event.CommandSourceCreateNPCEvent;
 import net.citizensnpcs.api.event.DespawnReason;
 import net.citizensnpcs.api.event.PlayerCreateNPCEvent;
 import net.citizensnpcs.api.npc.NPC;
@@ -197,7 +205,7 @@ public class NPCCommands {
         // Assume Player's position
         if (!args.hasFlag('a'))
             return;
-        if (sender instanceof ConsoleCommandSender)
+        if (sender instanceof ConsoleCommandSource)
             throw new ServerCommandException();
         npc.teleport(args.getSenderLocation(), TeleportCause.COMMAND);
     }
@@ -209,8 +217,8 @@ public class NPCCommands {
             modifiers = { "armorstand" },
             min = 1,
             max = 1)
-    @Requirements(selected = true, ownership = true, types = EntityType.ARMOR_STAND)
-    public void armorstand(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    @Requirements(selected = true, ownership = true, types = EntityTypes.ARMOR_STAND)
+    public void armorstand(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         ArmorStandTrait trait = npc.getTrait(ArmorStandTrait.class);
         if (args.hasValueFlag("visible")) {
             trait.setVisible(Boolean.valueOf(args.getFlag("visible")));
@@ -236,8 +244,8 @@ public class NPCCommands {
             modifiers = { "bossbar" },
             min = 1,
             max = 1)
-    @Requirements(selected = true, ownership = true, types = { EntityType.WITHER, EntityType.ENDER_DRAGON })
-    public void bossbar(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    @Requirements(selected = true, ownership = true, types = { EntityTypes.WITHER, EntityTypes.ENDER_DRAGON })
+    public void bossbar(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         BossBarTrait trait = npc.getTrait(BossBarTrait.class);
         if (args.hasValueFlag("color")) {
             BarColor color = Util.matchEnum(BarColor.values(), args.getFlag("color"));
@@ -269,8 +277,8 @@ public class NPCCommands {
             min = 1,
             max = 1,
             permission = "citizens.npc.collidable")
-    @Requirements(ownership = true, selected = true, types = { EntityType.PLAYER })
-    public void collidable(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    @Requirements(ownership = true, selected = true, types = { EntityTypes.PLAYER })
+    public void collidable(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         npc.data().setPersistent(NPC.COLLIDABLE_METADATA, !npc.data().get(NPC.COLLIDABLE_METADATA, true));
         Messaging.sendTr(sender,
                 npc.data().get(NPC.COLLIDABLE_METADATA) ? Messages.COLLIDABLE_SET : Messages.COLLIDABLE_UNSET,
@@ -285,7 +293,7 @@ public class NPCCommands {
             min = 1,
             max = 1,
             flags = "myno")
-    public void controllable(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    public void controllable(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         if ((npc.isSpawned() && !sender.hasPermission(
                 "citizens.npc.controllable." + npc.getEntity().getType().name().toLowerCase().replace("_", "")))
                 || !sender.hasPermission("citizens.npc.controllable"))
@@ -316,7 +324,7 @@ public class NPCCommands {
             min = 1,
             max = 1,
             permission = "citizens.npc.copy")
-    public void copy(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    public void copy(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         String name = args.getFlag("name", npc.getFullName());
         NPC copy = npc.clone();
         if (!copy.getFullName().equals(name)) {
@@ -332,7 +340,7 @@ public class NPCCommands {
 
         CommandSenderCreateNPCEvent event = sender instanceof Player ? new PlayerCreateNPCEvent((Player) sender, copy)
                 : new CommandSenderCreateNPCEvent(sender, copy);
-        Bukkit.getPluginManager().callEvent(event);
+        Sponge.getEventManager().post(event);
         if (event.isCancelled()) {
             event.getNPC().destroy();
             String reason = "Couldn't create NPC.";
@@ -354,7 +362,7 @@ public class NPCCommands {
             min = 2,
             permission = "citizens.npc.create")
     @Requirements
-    public void create(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    public void create(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         String name = Colorizer.parseColors(args.getJoinedStrings(1).trim());
 
         EntityType type = EntityType.PLAYER;
@@ -400,15 +408,15 @@ public class NPCCommands {
         }
         npc.getTrait(MobType.class).setType(type);
 
-        Location spawnLoc = null;
+        Location<World> spawnLoc = null;
         if (sender instanceof Player) {
             spawnLoc = args.getSenderLocation();
-        } else if (sender instanceof BlockCommandSender) {
+        } else if (sender instanceof CommandBlockSource) {
             spawnLoc = args.getSenderLocation();
         }
         CommandSenderCreateNPCEvent event = sender instanceof Player ? new PlayerCreateNPCEvent((Player) sender, npc)
                 : new CommandSenderCreateNPCEvent(sender, npc);
-        Bukkit.getPluginManager().callEvent(event);
+        Sponge.getEventManager().post(event);
         if (event.isCancelled()) {
             npc.destroy();
             String reason = "Couldn't create NPC.";
@@ -477,7 +485,7 @@ public class NPCCommands {
             max = 2,
             permission = "citizens.npc.despawn")
     @Requirements
-    public void despawn(final CommandContext args, final CommandSender sender, NPC npc) throws CommandException {
+    public void despawn(final CommandContext args, final CommandSource sender, NPC npc) throws CommandException {
         NPCCommandSelector.Callback callback = new NPCCommandSelector.Callback() {
             @Override
             public void run(NPC npc) throws CommandException {
@@ -512,7 +520,7 @@ public class NPCCommands {
             ownership = true,
             excludedTypes = { EntityType.BAT, EntityType.BLAZE, EntityType.ENDER_DRAGON, EntityType.GHAST,
                     EntityType.WITHER })
-    public void flyable(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    public void flyable(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         boolean flyable = args.argsLength() == 2 ? args.getString(1).equals("true") : !npc.isFlyable();
         npc.setFlyable(flyable);
         flyable = npc.isFlyable(); // may not have applied, eg bats always
@@ -528,8 +536,8 @@ public class NPCCommands {
             min = 1,
             max = 2,
             permission = "citizens.npc.gravity")
-    @Requirements(selected = true, ownership = true, types = { EntityType.PLAYER })
-    public void gamemode(CommandContext args, CommandSender sender, NPC npc) {
+    @Requirements(selected = true, ownership = true, types = { EntityTypes.PLAYER })
+    public void gamemode(CommandContext args, CommandSource sender, NPC npc) {
         Player player = (Player) npc.getEntity();
         if (args.argsLength() == 1) {
             Messaging.sendTr(sender, Messages.GAMEMODE_DESCRIBE, npc.getName(),
@@ -563,7 +571,7 @@ public class NPCCommands {
             max = 1,
             permission = "citizens.npc.glowing")
     @Requirements(selected = true, ownership = true)
-    public void glowing(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    public void glowing(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         if (args.hasValueFlag("color")) {
             ChatColor chatColor = Util.matchEnum(ChatColor.values(), args.getFlag("color"));
             if (!(npc.getEntity() instanceof Player))
@@ -590,7 +598,7 @@ public class NPCCommands {
             min = 1,
             max = 1,
             permission = "citizens.npc.gravity")
-    public void gravity(CommandContext args, CommandSender sender, NPC npc) {
+    public void gravity(CommandContext args, CommandSource sender, NPC npc) {
         boolean enabled = npc.getTrait(Gravity.class).toggle();
         String key = !enabled ? Messages.GRAVITY_ENABLED : Messages.GRAVITY_DISABLED;
         Messaging.sendTr(sender, key, npc.getName());
@@ -606,8 +614,8 @@ public class NPCCommands {
             max = 1,
             flags = "cb",
             permission = "citizens.npc.horse")
-    @Requirements(selected = true, ownership = true, types = EntityType.HORSE)
-    public void horse(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    @Requirements(selected = true, ownership = true, types = EntityTypes.HORSE)
+    public void horse(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         HorseModifiers horse = npc.getTrait(HorseModifiers.class);
         String output = "";
         if (args.hasFlag('c')) {
@@ -652,7 +660,7 @@ public class NPCCommands {
             min = 1,
             max = 1,
             permission = "citizens.npc.id")
-    public void id(CommandContext args, CommandSender sender, NPC npc) {
+    public void id(CommandContext args, CommandSource sender, NPC npc) {
         Messaging.send(sender, npc.getId());
     }
 
@@ -664,7 +672,7 @@ public class NPCCommands {
             min = 1,
             max = 1,
             permission = "citizens.npc.inventory")
-    public void inventory(CommandContext args, CommandSender sender, NPC npc) {
+    public void inventory(CommandContext args, CommandSource sender, NPC npc) {
         npc.getTrait(Inventory.class).openInventory((Player) sender);
     }
 
@@ -681,7 +689,7 @@ public class NPCCommands {
             selected = true,
             ownership = true,
             types = { EntityType.DROPPED_ITEM, EntityType.ITEM_FRAME, EntityType.FALLING_BLOCK })
-    public void item(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    public void item(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         Material mat = Material.matchMaterial(args.getString(1));
         if (mat == null)
             throw new CommandException(Messages.UNKNOWN_MATERIAL);
@@ -714,7 +722,7 @@ public class NPCCommands {
             max = 1,
             flags = "t",
             permission = "citizens.npc.leashable")
-    public void leashable(CommandContext args, CommandSender sender, NPC npc) {
+    public void leashable(CommandContext args, CommandSource sender, NPC npc) {
         boolean vulnerable = !npc.data().get(NPC.LEASH_PROTECTED_METADATA, true);
         if (args.hasFlag('t')) {
             npc.data().set(NPC.LEASH_PROTECTED_METADATA, vulnerable);
@@ -735,7 +743,7 @@ public class NPCCommands {
             max = 2,
             permission = "citizens.npc.list")
     @Requirements
-    public void list(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    public void list(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         NPCRegistry source = args.hasValueFlag("registry") ? CitizensAPI.getNamedNPCRegistry(args.getFlag("registry"))
                 : npcRegistry;
         if (source == null)
@@ -797,7 +805,7 @@ public class NPCCommands {
             min = 1,
             max = 1,
             permission = "citizens.npc.lookclose")
-    public void lookClose(CommandContext args, CommandSender sender, NPC npc) {
+    public void lookClose(CommandContext args, CommandSource sender, NPC npc) {
         Messaging.sendTr(sender,
                 npc.getTrait(LookClose.class).toggle() ? Messages.LOOKCLOSE_SET : Messages.LOOKCLOSE_STOPPED,
                 npc.getName());
@@ -818,7 +826,7 @@ public class NPCCommands {
             types = { EntityType.MINECART, EntityType.MINECART_CHEST, EntityType.MINECART_COMMAND,
                     EntityType.MINECART_FURNACE, EntityType.MINECART_HOPPER, EntityType.MINECART_MOB_SPAWNER,
                     EntityType.MINECART_TNT })
-    public void minecart(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    public void minecart(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         if (args.hasValueFlag("item")) {
             String raw = args.getFlag("item");
             int data = 0;
@@ -885,7 +893,7 @@ public class NPCCommands {
             modifiers = "moveto",
             min = 1,
             permission = "citizens.npc.moveto")
-    public void moveto(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    public void moveto(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         // Spawn the NPC if it isn't spawned to prevent NPEs
         if (!npc.isSpawned()) {
             npc.spawn(npc.getTrait(CurrentLocation.class).getLocation());
@@ -940,7 +948,7 @@ public class NPCCommands {
             flags = "h",
             permission = "citizens.npc.name")
     @Requirements(selected = true, ownership = true, livingEntity = true)
-    public void name(CommandContext args, CommandSender sender, NPC npc) {
+    public void name(CommandContext args, CommandSource sender, NPC npc) {
         String old = npc.data().<Object> get(NPC.NAMEPLATE_VISIBLE_METADATA, true).toString();
         if (args.hasFlag('h')) {
             old = "hover";
@@ -952,7 +960,7 @@ public class NPCCommands {
     }
 
     @Command(aliases = { "npc" }, desc = "Show basic NPC information", max = 0, permission = "citizens.npc.info")
-    public void npc(CommandContext args, CommandSender sender, final NPC npc) {
+    public void npc(CommandContext args, CommandSource sender, final NPC npc) {
         Messaging.send(sender, StringHelper.wrapHeader(npc.getName()));
         Messaging.send(sender, "    <a>ID: <e>" + npc.getId());
         Messaging.send(sender, "    <a>Type: <e>" + npc.getTrait(MobType.class).getType());
@@ -980,8 +988,8 @@ public class NPCCommands {
             max = 1,
             flags = "sn",
             permission = "citizens.npc.ocelot")
-    @Requirements(selected = true, ownership = true, types = { EntityType.OCELOT })
-    public void ocelot(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    @Requirements(selected = true, ownership = true, types = { EntityTypes.OCELOT })
+    public void ocelot(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         OcelotModifiers trait = npc.getTrait(OcelotModifiers.class);
         if (args.hasFlag('s')) {
             trait.setSitting(true);
@@ -1006,7 +1014,7 @@ public class NPCCommands {
             min = 1,
             max = 2,
             permission = "citizens.npc.owner")
-    public void owner(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    public void owner(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         Owner ownerTrait = npc.getTrait(Owner.class);
         if (args.argsLength() == 1) {
             Messaging.sendTr(sender, Messages.NPC_OWNER, npc.getName(), ownerTrait.getOwner());
@@ -1028,7 +1036,7 @@ public class NPCCommands {
             min = 1,
             max = 1,
             permission = "citizens.npc.passive")
-    public void passive(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    public void passive(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         boolean passive = args.hasValueFlag("set") ? Boolean.parseBoolean(args.getFlag("set"))
                 : npc.data().get(NPC.DAMAGE_OTHERS_METADATA, true);
         npc.data().setPersistent(NPC.DAMAGE_OTHERS_METADATA, !passive);
@@ -1043,7 +1051,7 @@ public class NPCCommands {
             min = 1,
             max = 1,
             permission = "citizens.npc.pathfindingoptions")
-    public void pathfindingOptions(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    public void pathfindingOptions(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         boolean found = false;
         if (args.hasValueFlag("avoid-water") || args.hasValueFlag("aw")) {
             String raw = args.getFlag("avoid-water", args.getFlag("aw"));
@@ -1090,7 +1098,7 @@ public class NPCCommands {
             min = 2,
             max = 2,
             permission = "citizens.npc.pathfindingrange")
-    public void pathfindingRange(CommandContext args, CommandSender sender, NPC npc) {
+    public void pathfindingRange(CommandContext args, CommandSource sender, NPC npc) {
         double range = Math.max(1, args.getDouble(1));
         npc.getNavigator().getDefaultParameters().range((float) range);
         Messaging.sendTr(sender, Messages.PATHFINDING_RANGE_SET, range);
@@ -1106,7 +1114,7 @@ public class NPCCommands {
             flags = "ar",
             permission = "citizens.npc.playerlist")
     @Requirements(selected = true, ownership = true, types = EntityType.PLAYER)
-    public void playerlist(CommandContext args, CommandSender sender, NPC npc) {
+    public void playerlist(CommandContext args, CommandSource sender, NPC npc) {
         boolean remove = !npc.data().get("removefromplayerlist", Setting.REMOVE_PLAYERS_FROM_PLAYER_LIST.asBoolean());
         if (args.hasFlag('a')) {
             remove = false;
@@ -1132,7 +1140,7 @@ public class NPCCommands {
             min = 1,
             max = 2,
             permission = "citizens.npc.pose")
-    public void pose(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    public void pose(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         Poses trait = npc.getTrait(Poses.class);
         if (args.hasValueFlag("save")) {
             if (args.getFlag("save").isEmpty())
@@ -1182,7 +1190,7 @@ public class NPCCommands {
             max = 1,
             permission = "citizens.npc.power")
     @Requirements(selected = true, ownership = true, types = { EntityType.CREEPER })
-    public void power(CommandContext args, CommandSender sender, NPC npc) {
+    public void power(CommandContext args, CommandSource sender, NPC npc) {
         Messaging.sendTr(sender,
                 npc.getTrait(Powered.class).toggle() ? Messages.POWERED_SET : Messages.POWERED_STOPPED);
     }
@@ -1196,7 +1204,7 @@ public class NPCCommands {
             max = 2,
             permission = "citizens.npc.profession")
     @Requirements(selected = true, ownership = true, types = { EntityType.VILLAGER })
-    public void profession(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    public void profession(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         String profession = args.getString(1);
         Profession parsed = Util.matchEnum(Profession.values(), profession.toUpperCase());
         if (parsed == null) {
@@ -1215,7 +1223,7 @@ public class NPCCommands {
             min = 2,
             permission = "citizens.npc.rabbittype")
     @Requirements(selected = true, ownership = true, types = { EntityType.RABBIT })
-    public void rabbitType(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    public void rabbitType(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         Rabbit.Type type;
         try {
             type = Rabbit.Type.valueOf(args.getString(1).toUpperCase());
@@ -1234,7 +1242,7 @@ public class NPCCommands {
             min = 1,
             max = 2)
     @Requirements
-    public void remove(final CommandContext args, final CommandSender sender, NPC npc) throws CommandException {
+    public void remove(final CommandContext args, final CommandSource sender, NPC npc) throws CommandException {
         if (args.argsLength() == 2) {
             if (args.getString(1).equalsIgnoreCase("all")) {
                 if (!sender.hasPermission("citizens.admin.remove.all") && !sender.hasPermission("citizens.admin"))
@@ -1248,7 +1256,7 @@ public class NPCCommands {
                     public void run(NPC npc) throws CommandException {
                         if (npc == null)
                             throw new CommandException(Messages.COMMAND_MUST_HAVE_SELECTED);
-                        if (!(sender instanceof ConsoleCommandSender) && !npc.getTrait(Owner.class).isOwnedBy(sender))
+                        if (!(sender instanceof ConsoleCommandSource) && !npc.getTrait(Owner.class).isOwnedBy(sender))
                             throw new CommandException(Messages.COMMAND_MUST_BE_OWNER);
                         if (!sender.hasPermission("citizens.npc.remove") && !sender.hasPermission("citizens.admin"))
                             throw new NoPermissionsException();
@@ -1262,7 +1270,7 @@ public class NPCCommands {
         }
         if (npc == null)
             throw new CommandException(Messages.COMMAND_MUST_HAVE_SELECTED);
-        if (!(sender instanceof ConsoleCommandSender) && !npc.getTrait(Owner.class).isOwnedBy(sender))
+        if (!(sender instanceof ConsoleCommandSource) && !npc.getTrait(Owner.class).isOwnedBy(sender))
             throw new CommandException(Messages.COMMAND_MUST_BE_OWNER);
         if (!sender.hasPermission("citizens.npc.remove") && !sender.hasPermission("citizens.admin"))
             throw new NoPermissionsException();
@@ -1277,7 +1285,7 @@ public class NPCCommands {
             modifiers = { "rename" },
             min = 2,
             permission = "citizens.npc.rename")
-    public void rename(CommandContext args, CommandSender sender, NPC npc) {
+    public void rename(CommandContext args, CommandSource sender, NPC npc) {
         String oldName = npc.getName();
         String newName = Colorizer.parseColors(args.getJoinedStrings(1));
         int nameLength = npc.getTrait(MobType.class).getType() == EntityType.PLAYER ? 46 : 64;
@@ -1303,7 +1311,7 @@ public class NPCCommands {
             min = 1,
             max = 2,
             permission = "citizens.npc.respawn")
-    public void respawn(CommandContext args, CommandSender sender, NPC npc) {
+    public void respawn(CommandContext args, CommandSource sender, NPC npc) {
         if (args.argsLength() > 1) {
             int delay = args.getInteger(1);
             npc.data().setPersistent(NPC.RESPAWN_DELAY_METADATA, delay);
@@ -1321,7 +1329,7 @@ public class NPCCommands {
             min = 1,
             max = 1,
             permission = "citizens.npc.script")
-    public void script(CommandContext args, CommandSender sender, NPC npc) {
+    public void script(CommandContext args, CommandSource sender, NPC npc) {
         ScriptTrait trait = npc.getTrait(ScriptTrait.class);
         if (args.hasValueFlag("add")) {
             List<String> files = new ArrayList<String>();
@@ -1349,7 +1357,7 @@ public class NPCCommands {
             max = 2,
             permission = "citizens.npc.select")
     @Requirements
-    public void select(CommandContext args, final CommandSender sender, final NPC npc) throws CommandException {
+    public void select(CommandContext args, final CommandSource sender, final NPC npc) throws CommandException {
         NPCCommandSelector.Callback callback = new NPCCommandSelector.Callback() {
             @Override
             public void run(NPC toSelect) throws CommandException {
@@ -1367,11 +1375,11 @@ public class NPCCommands {
             double range = Math.abs(args.getFlagDouble("r", 10));
             Entity player = (Player) sender;
             final Location location = args.getSenderLocation();
-            List<Entity> search = player.getNearbyEntities(range, range, range);
+            List<Entity> search = new ArrayList(player.getNearbyEntities(range));
             Collections.sort(search, new Comparator<Entity>() {
                 @Override
                 public int compare(Entity o1, Entity o2) {
-                    double d = o1.getLocation().distanceSquared(location) - o2.getLocation().distanceSquared(location);
+                    double d = o1.getLocation().getPosition().distanceSquared(location.getPosition()) - o2.getLocation().getPosition().distanceSquared(location.getPosition());
                     return d > 0 ? 1 : d < 0 ? -1 : 0;
                 }
             });
@@ -1395,8 +1403,8 @@ public class NPCCommands {
             min = 1,
             max = 1,
             permission = "citizens.npc.sheep")
-    @Requirements(selected = true, ownership = true, types = { EntityType.SHEEP })
-    public void sheep(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    @Requirements(selected = true, ownership = true, types = { EntityTypes.SHEEP })
+    public void sheep(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         SheepTrait trait = npc.getTrait(SheepTrait.class);
         boolean hasArg = false;
         if (args.hasValueFlag("sheared")) {
@@ -1428,7 +1436,7 @@ public class NPCCommands {
             flags = "cp",
             permission = "citizens.npc.skin")
     @Requirements(types = EntityType.PLAYER, selected = true, ownership = true)
-    public void skin(final CommandContext args, final CommandSender sender, final NPC npc) throws CommandException {
+    public void skin(final CommandContext args, final CommandSource sender, final NPC npc) throws CommandException {
         String skinName = npc.getName();
         if (args.hasFlag('c')) {
             npc.data().remove(NPC.PLAYER_SKIN_UUID_METADATA);
@@ -1459,8 +1467,8 @@ public class NPCCommands {
             min = 1,
             max = 5,
             permission = "citizens.npc.skinlayers")
-    @Requirements(types = EntityType.PLAYER, selected = true, ownership = true)
-    public void skinLayers(final CommandContext args, final CommandSender sender, final NPC npc)
+    @Requirements(types = EntityTypes.PLAYER, selected = true, ownership = true)
+    public void skinLayers(final CommandContext args, final CommandSource sender, final NPC npc)
             throws CommandException {
         SkinLayers trait = npc.getTrait(SkinLayers.class);
         if (args.hasValueFlag("cape")) {
@@ -1496,8 +1504,8 @@ public class NPCCommands {
             min = 1,
             max = 2,
             permission = "citizens.npc.size")
-    @Requirements(selected = true, ownership = true, types = { EntityType.MAGMA_CUBE, EntityType.SLIME })
-    public void slimeSize(CommandContext args, CommandSender sender, NPC npc) {
+    @Requirements(selected = true, ownership = true, types = { EntityTypes.MAGMA_CUBE, EntityTypes.SLIME })
+    public void slimeSize(CommandContext args, CommandSource sender, NPC npc) {
         SlimeSize trait = npc.getTrait(SlimeSize.class);
         if (args.argsLength() <= 1) {
             trait.describe(sender);
@@ -1517,8 +1525,8 @@ public class NPCCommands {
             min = 1,
             max = 1,
             permission = "citizens.npc.sound")
-    @Requirements(selected = true, ownership = true, livingEntity = true, excludedTypes = { EntityType.PLAYER })
-    public void sound(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    @Requirements(selected = true, ownership = true, livingEntity = true, excludedTypes = { EntityTypes.PLAYER })
+    public void sound(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         String ambientSound = npc.data().get(NPC.AMBIENT_SOUND_METADATA);
         String deathSound = npc.data().get(NPC.DEATH_SOUND_METADATA);
         String hurtSound = npc.data().get(NPC.HURT_SOUND_METADATA);
@@ -1584,7 +1592,7 @@ public class NPCCommands {
             max = 2,
             permission = "citizens.npc.spawn")
     @Requirements(ownership = true)
-    public void spawn(final CommandContext args, final CommandSender sender, NPC npc) throws CommandException {
+    public void spawn(final CommandContext args, final CommandSource sender, NPC npc) throws CommandException {
         NPCCommandSelector.Callback callback = new NPCCommandSelector.Callback() {
             @Override
             public void run(NPC respawn) throws CommandException {
@@ -1625,7 +1633,7 @@ public class NPCCommands {
             modifiers = { "speak" },
             min = 2,
             permission = "citizens.npc.speak")
-    public void speak(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    public void speak(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         String type = npc.getTrait(Speech.class).getDefaultVocalChord();
         String message = Colorizer.parseColors(args.getJoinedStrings(1));
 
@@ -1666,7 +1674,7 @@ public class NPCCommands {
             min = 2,
             max = 2,
             permission = "citizens.npc.speed")
-    public void speed(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    public void speed(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         float newSpeed = (float) Math.abs(args.getDouble(1));
         if (newSpeed >= Setting.MAX_SPEED.asDouble())
             throw new CommandException(Messages.SPEED_MODIFIER_ABOVE_LIMIT);
@@ -1683,7 +1691,7 @@ public class NPCCommands {
             min = 1,
             max = 1,
             permission = "citizens.npc.swim")
-    public void swim(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    public void swim(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         boolean swim = args.hasValueFlag("set") ? Boolean.parseBoolean(args.getFlag("set"))
                 : !npc.data().get(NPC.SWIMMING_METADATA, true);
         npc.data().setPersistent(NPC.SWIMMING_METADATA, swim);
@@ -1698,7 +1706,7 @@ public class NPCCommands {
             min = 1,
             max = 1,
             permission = "citizens.npc.targetable")
-    public void targetable(CommandContext args, CommandSender sender, NPC npc) {
+    public void targetable(CommandContext args, CommandSource sender, NPC npc) {
         boolean targetable = !npc.data().get(NPC.TARGETABLE_METADATA,
                 npc.data().get(NPC.DEFAULT_PROTECTED_METADATA, true));
         if (args.hasFlag('t')) {
@@ -1735,7 +1743,7 @@ public class NPCCommands {
             min = 1,
             max = 1,
             permission = "citizens.npc.tphere")
-    public void tphere(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    public void tphere(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         if (args.getSenderLocation() == null)
             throw new ServerCommandException();
         // Spawn the NPC if it isn't spawned to prevent NPEs
@@ -1766,7 +1774,7 @@ public class NPCCommands {
             max = 3,
             permission = "citizens.npc.tpto")
     @Requirements
-    public void tpto(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    public void tpto(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         Entity from = null, to = null;
         if (npc != null) {
             from = npc.getEntity();
@@ -1809,7 +1817,7 @@ public class NPCCommands {
             min = 2,
             max = 2,
             permission = "citizens.npc.type")
-    public void type(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    public void type(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         EntityType type = Util.matchEntityType(args.getString(1));
         if (type == null)
             throw new CommandException(Messages.INVALID_ENTITY_TYPE, args.getString(1));
@@ -1826,7 +1834,7 @@ public class NPCCommands {
             max = 1,
             flags = "t",
             permission = "citizens.npc.vulnerable")
-    public void vulnerable(CommandContext args, CommandSender sender, NPC npc) {
+    public void vulnerable(CommandContext args, CommandSource sender, NPC npc) {
         boolean vulnerable = !npc.data().get(NPC.DEFAULT_PROTECTED_METADATA, true);
         if (args.hasFlag('t')) {
             npc.data().set(NPC.DEFAULT_PROTECTED_METADATA, vulnerable);
@@ -1845,8 +1853,8 @@ public class NPCCommands {
             min = 1,
             max = 1,
             permission = "citizens.npc.wither")
-    @Requirements(selected = true, ownership = true, types = { EntityType.WITHER })
-    public void wither(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    @Requirements(selected = true, ownership = true, types = { EntityTypes.WITHER })
+    public void wither(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         WitherTrait trait = npc.getTrait(WitherTrait.class);
         boolean hasArg = false;
         if (args.hasValueFlag("charged")) {
@@ -1867,8 +1875,8 @@ public class NPCCommands {
             max = 1,
             flags = "sat",
             permission = "citizens.npc.wolf")
-    @Requirements(selected = true, ownership = true, types = EntityType.WOLF)
-    public void wolf(CommandContext args, CommandSender sender, NPC npc) throws CommandException {
+    @Requirements(selected = true, ownership = true, types = EntityTypes.WOLF)
+    public void wolf(CommandContext args, CommandSource sender, NPC npc) throws CommandException {
         WolfModifiers trait = npc.getTrait(WolfModifiers.class);
         trait.setAngry(args.hasFlag('a'));
         trait.setSitting(args.hasFlag('s'));

@@ -1,10 +1,12 @@
 package net.citizensnpcs.trait.waypoint.triggers;
 
+import net.citizensnpcs.Citizens;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.persistence.Persist;
 import net.citizensnpcs.trait.waypoint.WaypointProvider;
 import net.citizensnpcs.trait.waypoint.Waypoints;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
@@ -37,11 +39,11 @@ public class DelayTrigger implements WaypointTrigger {
 
     private void scheduleTask(final WaypointProvider provider) {
         provider.setPaused(true);
-        Bukkit.getScheduler().scheduleSyncDelayedTask(CitizensAPI.getPlugin(), new Runnable() {
+        Sponge.getGame().getScheduler().createTaskBuilder().delayTicks(this.delay).execute(new Runnable() {
             @Override
             public void run() {
                 provider.setPaused(false);
             }
-        }, delay);
+        }).submit(CitizensAPI.getPlugin());
     }
 }

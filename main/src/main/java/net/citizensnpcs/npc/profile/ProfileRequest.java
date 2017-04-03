@@ -9,6 +9,7 @@ import com.google.common.base.Preconditions;
 import com.mojang.authlib.GameProfile;
 
 import net.citizensnpcs.api.CitizensAPI;
+import org.spongepowered.api.Sponge;
 
 /**
  * Stores basic information about a single profile used to request profiles from the Mojang servers.
@@ -105,7 +106,7 @@ public class ProfileRequest {
     void setResult(final @Nullable GameProfile profile, final ProfileFetchResult result) {
         if (!CitizensAPI.hasImplementation())
             return;
-        Bukkit.getScheduler().scheduleSyncDelayedTask(CitizensAPI.getPlugin(), new Runnable() {
+        Sponge.getGame().getScheduler().createTaskBuilder().execute(new Runnable() {
             @Override
             public void run() {
                 ProfileRequest.this.profile = profile;
@@ -120,6 +121,6 @@ public class ProfileRequest {
 
                 handlers = null;
             }
-        });
+        }).submit(CitizensAPI.getPlugin());
     }
 }

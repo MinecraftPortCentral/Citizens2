@@ -14,6 +14,8 @@ import com.mojang.authlib.ProfileLookupCallback;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.util.Messaging;
 import net.citizensnpcs.util.NMS;
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.scheduler.Task;
 
 /**
  * Fetches game profiles that include skin data from Mojang servers.
@@ -141,7 +143,7 @@ public class ProfileFetcher {
         }
 
         PROFILE_THREAD = new ProfileFetchThread();
-        THREAD_TASK = Bukkit.getScheduler().runTaskTimerAsynchronously(CitizensAPI.getPlugin(), PROFILE_THREAD, 21, 20);
+        THREAD_TASK = Sponge.getGame().getScheduler().createTaskBuilder().async().delayTicks(21).intervalTicks(20).execute(PROFILE_THREAD).submit(CitizensAPI.getPlugin());
     }
 
     private static boolean isProfileNotFound(Exception e) {
@@ -169,5 +171,5 @@ public class ProfileFetcher {
     }
 
     private static ProfileFetchThread PROFILE_THREAD;
-    private static BukkitTask THREAD_TASK;
+    private static Task THREAD_TASK;
 }

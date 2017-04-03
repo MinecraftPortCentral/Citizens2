@@ -12,6 +12,7 @@ import net.citizensnpcs.api.persistence.PersistenceLoader;
 import net.citizensnpcs.trait.waypoint.triggers.DelayTrigger;
 import net.citizensnpcs.trait.waypoint.triggers.WaypointTrigger;
 import net.citizensnpcs.trait.waypoint.triggers.WaypointTriggerRegistry;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
@@ -95,12 +96,12 @@ public class Waypoint {
             if (delay <= 0)
                 continue;
             final int newStart = i + 1;
-            Bukkit.getScheduler().scheduleSyncDelayedTask(CitizensAPI.getPlugin(), new Runnable() {
+            Sponge.getGame().getScheduler().createTaskBuilder().delayTicks(delay).execute(new Runnable() {
                 @Override
                 public void run() {
                     runTriggers(npc, newStart);
                 }
-            }, delay);
+            }).submit(CitizensAPI.getPlugin());
             break;
         }
     }

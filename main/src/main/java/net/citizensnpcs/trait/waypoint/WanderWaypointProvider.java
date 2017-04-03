@@ -9,8 +9,10 @@ import net.citizensnpcs.api.persistence.Persist;
 import net.citizensnpcs.api.util.DataKey;
 import net.citizensnpcs.api.util.Messaging;
 import net.citizensnpcs.util.Messages;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.message.MessageChannelEvent;
 
 public class WanderWaypointProvider implements WaypointProvider {
     private Goal currentGoal;
@@ -35,7 +37,7 @@ public class WanderWaypointProvider implements WaypointProvider {
             }
 
             @Listener
-            public void onPlayerChat(AsyncPlayerChatEvent event) {
+            public void onPlayerChat(MessageChannelEvent.Chat event) {
                 if (!event.getPlayer().equals(sender))
                     return;
                 String message = event.getMessage().toLowerCase();
@@ -54,12 +56,12 @@ public class WanderWaypointProvider implements WaypointProvider {
                         }
                     } catch (Exception ex) {
                     }
-                    Bukkit.getScheduler().scheduleSyncDelayedTask(CitizensAPI.getPlugin(), new Runnable() {
+                    Sponge.getGame().getScheduler().createTaskBuilder().execute(new Runnable() {
                         @Override
                         public void run() {
                             Messaging.sendTr(sender, Messages.WANDER_WAYPOINTS_RANGE_SET, xrange, yrange);
                         }
-                    });
+                    }).submit(CitizensAPI.getPlugin());
                 }
             }
         };

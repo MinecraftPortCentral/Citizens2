@@ -288,13 +288,13 @@ public class SkinUpdateTracker {
     // hard reset players near a skinnable NPC
     private void resetNearbyPlayers(SkinnableEntity skinnable) {
         Entity entity = skinnable.getBukkitEntity();
-        if (entity == null || !entity.isValid())
+        if (entity == null)
             return;
 
         double viewDistance = Settings.Setting.NPC_SKIN_VIEW_DISTANCE.asDouble();
         viewDistance *= viewDistance;
         Location<World> location = entity.getLocation();
-        List<Player> players = entity.getWorld().getPlayers();
+        Collection<Player> players = entity.getWorld().getPlayers();
         for (Player player : players) {
             if (player.hasMetadata("NPC"))
                 continue;
@@ -326,7 +326,7 @@ public class SkinUpdateTracker {
         if (player.hasMetadata("NPC"))
             return;
 
-        new BukkitRunnable() {
+        Sponge.getGame().getScheduler().createTaskBuilder().delayTicks(delay).execute(new Runnable() {
             @Override
             public void run() {
                 List<SkinnableEntity> visible = getNearbyNPCs(player, reset, false);
@@ -334,18 +334,18 @@ public class SkinUpdateTracker {
                     skinnable.getSkinTracker().updateViewer(player);
                 }
             }
-        }.runTaskLater(CitizensAPI.getPlugin(), delay);
+        }).submit(CitizensAPI.getPlugin());
     }
 
     // update players when the NPC navigates into their field of view
-    private class NPCNavigationTracker extends BukkitRunnable {
+    private class NPCNavigationTracker implements Runnable {
         @Override
         public void run() {
             if (navigating.isEmpty() || playerTrackers.isEmpty())
                 return;
 
             List<SkinnableEntity> nearby = new ArrayList<SkinnableEntity>(10);
-            Collection<? extends Player> players = Bukkit.getOnlinePlayers();
+            Collection<? extends Player> players = Sponge.getServer().getOnlinePlayers();
 
             for (Player player : players) {
                 if (player.hasMetadata("NPC"))
@@ -366,7 +366,7 @@ public class SkinUpdateTracker {
 
     // Updates players. Repeating task used to schedule updates without
     // causing excessive scheduling.
-    private class NPCNavigationUpdater extends BukkitRunnable {
+    private class NPCNavigationUpdater implements Runnable {
         Queue<UpdateInfo> queue = new ArrayDeque<UpdateInfo>(20);
 
         @Override
@@ -404,7 +404,7 @@ public class SkinUpdateTracker {
 
         // resets initial yaw and location to the players current location and yaw.
         void reset(Player player) {
-            player.getLocation(this.location);
+            player.getLocation();
             if (rotationCount < 3) {
                 float rotationDegrees = Settings.Setting.NPC_SKIN_ROTATION_UPDATE_DEGREES.asFloat();
                 float yaw = Util.clampYaw(this.location.getYaw());
@@ -470,8 +470,6 @@ public class SkinUpdateTracker {
         }
     }
 
-    private static final Location<World> CACHE_LOCATION = new Location<World>(null, 0, 0, 0);
     private static final float FIELD_OF_VIEW = 70f;
     private static final int MOVEMENT_SKIN_UPDATE_DISTANCE = 50 * 50;
-    private static final Location<World> NPC_LOCATION = new Location<World>(null, 0, 0, 0);
 }
