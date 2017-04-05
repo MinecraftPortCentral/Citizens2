@@ -20,11 +20,11 @@ public class TalkableEntity implements Talkable {
     }
 
     public TalkableEntity(NPC npc) {
-        entity = npc.getEntity();
+        this.entity = npc.getEntity();
     }
 
     public TalkableEntity(Player player) {
-        entity = player;
+        this.entity = player;
     }
 
     /**
@@ -38,11 +38,11 @@ public class TalkableEntity implements Talkable {
         if (!(o instanceof Entity)) {
             return -1;
             // If NPC and matches, return 0
-        } else if (CitizensAPI.getNPCRegistry().isNPC((Entity) o) && CitizensAPI.getNPCRegistry().isNPC(entity)
+        } else if (CitizensAPI.getNPCRegistry().isNPC((Entity) o) && CitizensAPI.getNPCRegistry().isNPC(this.entity)
                 && CitizensAPI.getNPCRegistry().getNPC((Entity) o).getUniqueId()
-                        .equals(CitizensAPI.getNPCRegistry().getNPC(entity).getUniqueId())) {
+                        .equals(CitizensAPI.getNPCRegistry().getNPC(this.entity).getUniqueId())) {
             return 0;
-        } else if (entity.equals(o)) {
+        } else if (this.entity.equals(o)) {
             return 0;
         } else {
             return 1;
@@ -51,23 +51,23 @@ public class TalkableEntity implements Talkable {
 
     @Override
     public Entity getEntity() {
-        return entity;
+        return this.entity;
     }
 
     @Override
     public String getName() {
-        if (CitizensAPI.getNPCRegistry().isNPC(entity)) {
-            return CitizensAPI.getNPCRegistry().getNPC(entity).getName();
-        } else if (entity instanceof Player) {
-            return ((Player) entity).getName();
+        if (CitizensAPI.getNPCRegistry().isNPC(this.entity)) {
+            return CitizensAPI.getNPCRegistry().getNPC(this.entity).getName();
+        } else if (this.entity instanceof Player) {
+            return ((Player) this.entity).getName();
         } else {
-            return entity.getType().name().replace("_", " ");
+            return this.entity.getType().getId().replace("_", " ");
         }
     }
 
     private void talk(String message) {
-        if (entity instanceof Player && !CitizensAPI.getNPCRegistry().isNPC(entity))
-            Messaging.send((Player) entity, message);
+        if (this.entity instanceof Player && !CitizensAPI.getNPCRegistry().isNPC(this.entity))
+            Messaging.send((Player) this.entity, message);
     }
 
     @Override

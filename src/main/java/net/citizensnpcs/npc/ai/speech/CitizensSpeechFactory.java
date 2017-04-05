@@ -7,9 +7,8 @@ import java.util.Map.Entry;
 import net.citizensnpcs.api.ai.speech.SpeechFactory;
 import net.citizensnpcs.api.ai.speech.Talkable;
 import net.citizensnpcs.api.ai.speech.VocalChord;
-import org.spongepowered.api.entity.Entity;
-import org.spongepowered.api.entity.living.Living;
 import com.google.common.base.Preconditions;
+import org.spongepowered.api.entity.Entity;
 
 public class CitizensSpeechFactory implements SpeechFactory {
     Map<String, Class<? extends VocalChord>> registered = new HashMap<String, Class<? extends VocalChord>>();
@@ -19,9 +18,7 @@ public class CitizensSpeechFactory implements SpeechFactory {
         // Return a new instance of the VocalChord specified
         try {
             return clazz.newInstance();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
+        } catch (InstantiationException | IllegalAccessException e) {
             e.printStackTrace();
         }
         return null;
@@ -33,10 +30,8 @@ public class CitizensSpeechFactory implements SpeechFactory {
         if (isRegistered(name))
             // Return a new instance of the VocalChord specified
             try {
-                return registered.get(name.toLowerCase()).newInstance();
-            } catch (InstantiationException e) {
-                e.printStackTrace();
-            } catch (IllegalAccessException e) {
+                return this.registered.get(name.toLowerCase()).newInstance();
+            } catch (InstantiationException | IllegalAccessException e) {
                 e.printStackTrace();
             }
         return null;
@@ -45,7 +40,7 @@ public class CitizensSpeechFactory implements SpeechFactory {
     @Override
     public String getVocalChordName(Class<? extends VocalChord> clazz) {
         // Get the name of a VocalChord class that has been registered
-        for (Entry<String, Class<? extends VocalChord>> vocalChord : registered.entrySet())
+        for (Entry<String, Class<? extends VocalChord>> vocalChord : this.registered.entrySet())
             if (vocalChord.getValue() == clazz)
                 return vocalChord.getKey();
 
@@ -54,7 +49,7 @@ public class CitizensSpeechFactory implements SpeechFactory {
 
     @Override
     public boolean isRegistered(String name) {
-        return registered.containsKey(name.toLowerCase());
+        return this.registered.containsKey(name.toLowerCase());
     }
 
     @Override
@@ -64,17 +59,13 @@ public class CitizensSpeechFactory implements SpeechFactory {
         return new TalkableEntity(entity);
     }
 
-    public Talkable newTalkableEntity(Living entity) {
-        return newTalkableEntity((Entity) entity);
-    }
-
     @Override
     public void register(Class<? extends VocalChord> clazz, String name) {
         Preconditions.checkNotNull(name, "info cannot be null");
         Preconditions.checkNotNull(clazz, "vocalchord cannot be null");
-        if (registered.containsKey(name.toLowerCase()))
+        if (this.registered.containsKey(name.toLowerCase()))
             throw new IllegalArgumentException("vocalchord name already registered");
-        registered.put(name.toLowerCase(), clazz);
+        this.registered.put(name.toLowerCase(), clazz);
     }
 
 }

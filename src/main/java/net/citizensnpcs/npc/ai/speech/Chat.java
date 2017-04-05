@@ -1,8 +1,10 @@
 package net.citizensnpcs.npc.ai.speech;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
+import net.citizensnpcs.Settings;
 import net.citizensnpcs.Settings.Setting;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.ai.speech.SpeechContext;
@@ -17,7 +19,7 @@ public class Chat implements VocalChord {
 
     @Override
     public String getName() {
-        return VOCAL_CHORD_NAME;
+        return this.VOCAL_CHORD_NAME;
     }
 
     @Override
@@ -106,8 +108,13 @@ public class Chat implements VocalChord {
 
     private void talkToBystanders(NPC npc, String text, SpeechContext context) {
         // Get list of nearby entities
-        List<Entity> bystanderEntities = npc.getEntity().getNearbyEntities(Setting.CHAT_RANGE.asDouble(),
-                Setting.CHAT_RANGE.asDouble(), Setting.CHAT_RANGE.asDouble());
+        npc.getEntity().getNearbyEntities(entity -> {
+            if (entity.getLocation().getPosition().distance(npc.getEntity().getLocation().getPosition()) >= Setting.CHAT_RANGE.asDouble()) {
+                return false;
+            }
+
+        })
+        Collection<Entity> bystanderEntities = npc.getEntity().getNearbyEntities(Setting.CHAT_RANGE.asDouble());
         for (Entity bystander : bystanderEntities) {
             // Continue if a LivingEntity, which is compatible with
             // TalkableEntity
