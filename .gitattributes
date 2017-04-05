@@ -1,0 +1,9 @@
+# Normalize as LF in the repository, OS native locally
+* text=auto
+
+*.bat text eol=crlf
+gradlew text eol=lf
+*.sh text eol=lf
+
+*.java text
+*.java diff=java

@@ -1,0 +1,3 @@
+[submodule "CitizensAPI"]
+	path = CitizensAPI
+	url = https://github.com/MinecraftPortCentral/CitizensAPI.git
