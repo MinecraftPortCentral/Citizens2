@@ -282,7 +282,7 @@ public class Citizens implements CitizensPlugin {
 
         npcRegistry = new CitizensNPCRegistry(saves);
         traitFactory = new CitizensTraitFactory();
-        selector = new NPCSelector(this);
+        selector = new NPCSelector(pluginContainer);
         speechFactory = new CitizensSpeechFactory();
         speechFactory.register(Chat.class, "chat");
 
@@ -337,7 +337,7 @@ public class Citizens implements CitizensPlugin {
 
     private void registerScriptHelpers() {
         ScriptCompiler compiler = CitizensAPI.getScriptCompiler();
-        compiler.registerGlobalContextProvider(new EventRegistrar(this));
+        compiler.registerGlobalContextProvider(new EventRegistrar(pluginContainer));
         compiler.registerGlobalContextProvider(new ObjectProvider("plugin", this));
     }
 

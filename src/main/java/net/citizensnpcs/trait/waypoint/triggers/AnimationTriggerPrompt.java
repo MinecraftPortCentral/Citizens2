@@ -3,13 +3,13 @@ package net.citizensnpcs.trait.waypoint.triggers;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import net.citizensnpcs.api.util.Messaging;
+import net.citizensnpcs.conv.ConversationContext;
+import net.citizensnpcs.conv.Prompt;
+import net.citizensnpcs.conv.StringPrompt;
 import net.citizensnpcs.util.Messages;
 import net.citizensnpcs.util.PlayerAnimation;
 import net.citizensnpcs.util.Util;
 import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.conv.ConversationContext;
-import org.spongepowered.api.conv.Prompt;
-import org.spongepowered.api.conv.StringPrompt;
 
 import java.util.List;
 

@@ -12,15 +12,13 @@ import net.citizensnpcs.api.command.exception.WrappedCommandException;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.npc.NPCRegistry;
 import net.citizensnpcs.api.util.Messaging;
+import net.citizensnpcs.conv.Conversation;
+import net.citizensnpcs.conv.ConversationContext;
+import net.citizensnpcs.conv.NumericPrompt;
+import net.citizensnpcs.conv.Prompt;
 import net.citizensnpcs.util.Messages;
 import net.citizensnpcs.util.Util;
 import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.conv.Conversable;
-import org.spongepowered.api.conv.Conversation;
-import org.spongepowered.api.conv.ConversationContext;
-import org.spongepowered.api.conv.ConversationFactory;
-import org.spongepowered.api.conv.NumericPrompt;
-import org.spongepowered.api.conv.Prompt;
 
 import java.util.List;
 
@@ -80,10 +78,10 @@ public class NPCCommandSelector extends NumericPrompt {
         public void run(NPC npc) throws CommandException;
     }
 
-    public static void start(Callback callback, Conversable player, List<NPC> possible) {
-        final Conversation conversation = new ConversationFactory(CitizensAPI.getPlugin()).withLocalEcho(false)
-                .withEscapeSequence("exit").withModality(false)
-                .withFirstPrompt(new NPCCommandSelector(callback, possible)).buildConversation(player);
+    public static void start(Callback callback, CommandSource player, List<NPC> possible) {
+        final Conversation conversation = Conversation.builder(CitizensAPI.getPlugin()).localEcho(false)
+                .escapeSequence("exit").modality(false)
+                .firstPrompt(new NPCCommandSelector(callback, possible)).build(player);
         conversation.begin();
     }
 
@@ -111,7 +109,7 @@ public class NPCCommandSelector extends NumericPrompt {
             if (possible.size() == 1) {
                 callback.run(possible.get(0));
             } else if (possible.size() > 1) {
-                NPCCommandSelector.start(callback, (Conversable) sender, possible);
+                NPCCommandSelector.start(callback, sender, possible);
                 return;
             }
         }

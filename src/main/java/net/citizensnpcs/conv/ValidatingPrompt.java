@@ -1,4 +1,4 @@
-package org.spongepowered.api.conv;
+package net.citizensnpcs.conv;
 
 import org.spongepowered.api.text.Text;
 

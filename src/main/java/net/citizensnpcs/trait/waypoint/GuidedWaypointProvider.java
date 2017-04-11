@@ -1,12 +1,9 @@
 package net.citizensnpcs.trait.waypoint;
 
-import java.util.Iterator;
-import java.util.List;
-
+import com.flowpowered.math.vector.Vector3d;
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.ai.Goal;
 import net.citizensnpcs.api.ai.GoalSelector;
@@ -41,6 +38,9 @@ import org.spongepowered.api.event.filter.cause.First;
 import org.spongepowered.api.event.message.MessageChannelEvent;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
+
+import java.util.Iterator;
+import java.util.List;
 
 public class GuidedWaypointProvider implements EnumerableWaypointProvider {
     private final List<Waypoint> available = Lists.newArrayList();
@@ -111,7 +111,7 @@ public class GuidedWaypointProvider implements EnumerableWaypointProvider {
 
             @Listener
             public void onPlayerInteract(InteractBlockEvent event, @First Player eventPlayer) {
-                if (!eventPlayer.equals(player) || event.getTargetBlock().getState().getType() == BlockTypes.AIR 
+                if (!eventPlayer.equals(player) || event.getTargetBlock().getState().getType() == BlockTypes.AIR
                         || event.getAction() == Action.RIGHT_CLICK_BLOCK
                         || event.getClickedBlock() == null || event.getHand() == EquipmentSlot.OFF_HAND)
                     return;
@@ -207,9 +207,9 @@ public class GuidedWaypointProvider implements EnumerableWaypointProvider {
                 new Function<Waypoint, Region3D<Waypoint>>() {
                     @Override
                     public Region3D<Waypoint> apply(Waypoint arg0) {
-                        Location loc = arg0.getLocation();
-                        Vector root = new Vector(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
-                        return new Region3D<Waypoint>(root, root, arg0);
+                        Location<World> loc = arg0.getLocation();
+                        Vector3d root = new Vector3d(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+                        return new Region3D<>(root, root, arg0);
                     }
                 })));
     }

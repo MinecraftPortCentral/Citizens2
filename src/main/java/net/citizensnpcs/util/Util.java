@@ -1,5 +1,6 @@
 package net.citizensnpcs.util;
 
+import java.util.Collection;
 import java.util.Random;
 
 import com.flowpowered.math.vector.Vector3d;
@@ -9,6 +10,7 @@ import com.google.common.base.Splitter;
 import net.citizensnpcs.api.event.NPCCollisionEvent;
 import net.citizensnpcs.api.event.NPCPushEvent;
 import net.citizensnpcs.api.npc.NPC;
+import org.spongepowered.api.CatalogType;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.property.entity.EyeLocationProperty;
 import org.spongepowered.api.data.type.HandTypes;
@@ -17,6 +19,7 @@ import org.spongepowered.api.entity.EntityType;
 import org.spongepowered.api.entity.EntityTypes;
 import org.spongepowered.api.entity.living.Living;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
@@ -34,8 +37,8 @@ public class Util {
         Sponge.getEventManager().post(new NPCCollisionEvent(npc, entity));
     }
 
-    public static NPCPushEvent callPushEvent(NPC npc, Vector3d vector) {
-        NPCPushEvent event = new NPCPushEvent(npc, vector);
+    public static NPCPushEvent callPushEvent(NPC npc, Vector3d vector, Cause cause) {
+        NPCPushEvent event = new NPCPushEvent(npc, vector, cause);
         event.setCancelled(npc.data().get(NPC.DEFAULT_PROTECTED_METADATA, true));
         Sponge.getEventManager().post(event);
         return event;
@@ -77,7 +80,7 @@ public class Util {
     }
 
     public static Location<World> getEyeLocation(Entity entity) {
-        return entity instanceof Living ? new Location<World>(entity.getWorld(), ((Living) entity).getProperty(EyeLocationProperty.class).get().getValue()) : entity.getLocation();
+        return entity instanceof Living ? new Location<>(entity.getWorld(), ((Living) entity).getProperty(EyeLocationProperty.class).get().getValue()) : entity.getLocation();
     }
 
     public static Random getFastRandom() {
@@ -120,7 +123,7 @@ public class Util {
     }
 
     public static EntityType matchEntityType(String toMatch) {
-        return matchEnum(EntityType.values(), toMatch);
+        return matchCatalogType(Sponge.getRegistry().getAllOf(EntityType.class), toMatch);
     }
 
     public static <T extends Enum<?>> T matchEnum(T[] values, String toMatch) {
@@ -133,6 +136,25 @@ public class Util {
         }
         for (T check : values) {
             String name = check.name().toLowerCase();
+            if (name.replace("_", "").equals(toMatch) || name.startsWith(toMatch)) {
+                return check;
+            }
+        }
+        return null;
+    }
+    public static <T extends CatalogType> T matchCatalogType(Collection<T> values, String toMatch) {
+        toMatch = toMatch.toLowerCase().replace('-', '_').replace(' ', '_');
+        for (T check : values) {
+            if (toMatch.equals(check.getId().toLowerCase())
+                    || (toMatch.equals("item") && check == EntityTypes.ITEM)) {
+                return check; // check for an exact match first
+            }
+        }
+        for (T check : values) {
+            String name = check.getId().toLowerCase();
+            if (name.indexOf(':') != -1) {
+                name = name.substring(name.indexOf(':') + 1);
+            }
             if (name.replace("_", "").equals(toMatch) || name.startsWith(toMatch)) {
                 return check;
             }
@@ -157,5 +179,5 @@ public class Util {
         return e.name().toLowerCase().replace('_', ' ');
     }
 
-    private static final Location<World> AT_LOCATION = new Location<World>(null, 0, 0, 0);
+    private static final Location<World> AT_LOCATION = new Location<>(null, 0, 0, 0);
 }

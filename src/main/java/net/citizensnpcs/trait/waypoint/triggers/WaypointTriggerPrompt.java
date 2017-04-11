@@ -1,7 +1,7 @@
 package net.citizensnpcs.trait.waypoint.triggers;
 
-import org.spongepowered.api.conv.ConversationContext;
-import org.spongepowered.api.conv.Prompt;
+import net.citizensnpcs.conv.ConversationContext;
+import net.citizensnpcs.conv.Prompt;
 
 /**
  * Marker interface for waypoint trigger prompts.

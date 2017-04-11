@@ -2,6 +2,9 @@ package net.citizensnpcs.trait.waypoint.triggers;
 
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.persistence.Persist;
+import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.event.cause.entity.teleport.TeleportCause;
+import org.spongepowered.api.event.cause.entity.teleport.TeleportTypes;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
@@ -25,7 +28,7 @@ public class TeleportTrigger implements WaypointTrigger {
     @Override
     public void onWaypointReached(NPC npc, Location<World> waypoint) {
         if (location != null) {
-            npc.teleport(waypoint, TeleportCause.PLUGIN);
+            npc.teleport(waypoint, Cause.source(TeleportCause.builder().type(TeleportTypes.PLUGIN).build()).build());
         }
     }
 }

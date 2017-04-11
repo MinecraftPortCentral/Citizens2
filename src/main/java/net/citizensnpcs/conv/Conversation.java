@@ -1,4 +1,4 @@
-package org.spongepowered.api.conv;
+package net.citizensnpcs.conv;
 
 import static com.google.common.base.Preconditions.checkState;
 

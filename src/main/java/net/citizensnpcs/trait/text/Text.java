@@ -11,13 +11,13 @@ import net.citizensnpcs.api.trait.TraitName;
 import net.citizensnpcs.api.util.DataKey;
 import net.citizensnpcs.api.util.Messaging;
 import net.citizensnpcs.api.util.Paginator;
+import net.citizensnpcs.conv.Conversation;
+import net.citizensnpcs.conv.ConversationAbandonedEvent;
 import net.citizensnpcs.editor.Editor;
 import net.citizensnpcs.trait.Toggleable;
 import net.citizensnpcs.util.Messages;
 import net.citizensnpcs.util.Util;
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.conv.Conversation;
-import org.spongepowered.api.conv.ConversationAbandonedEvent;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
@@ -130,7 +130,7 @@ public class Text extends Trait implements Runnable, Toggleable {
             return;
         Collection<Entity> nearby = npc.getEntity().getNearbyEntities(range);
         for (Entity search : nearby) {
-            if (!(search instanceof Player) || ((Player) search).getGameMode() == GameModes.SPECTATOR)
+            if (!(search instanceof Player) || ((Player) search).gameMode().get() == GameModes.SPECTATOR)
                 continue;
             Player player = (Player) search;
             // If the cooldown is not expired, do not send text

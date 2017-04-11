@@ -1,4 +1,4 @@
-package org.spongepowered.api.conv;
+package net.citizensnpcs.conv;
 
 import org.apache.commons.lang3.math.NumberUtils;
 

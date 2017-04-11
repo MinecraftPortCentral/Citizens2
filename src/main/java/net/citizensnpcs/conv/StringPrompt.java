@@ -1,4 +1,4 @@
-package org.spongepowered.api.conv;
+package net.citizensnpcs.conv;
 
 public abstract class StringPrompt implements Prompt {
 

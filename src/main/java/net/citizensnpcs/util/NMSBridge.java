@@ -19,6 +19,7 @@ import net.citizensnpcs.npc.ai.MCTargetStrategy.TargetNavigator;
 import net.citizensnpcs.npc.skin.SkinnableEntity;
 import org.spongepowered.api.block.BlockType;
 import org.spongepowered.api.block.tileentity.Skull;
+import org.spongepowered.api.boss.BossBar;
 import org.spongepowered.api.data.manipulator.mutable.entity.TameableData;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.living.Living;
@@ -41,7 +42,7 @@ public interface NMSBridge {
 
     public BlockBreaker getBlockBreaker(Entity entity, BlockType targetBlock, BlockBreakerConfiguration config);
 
-    //public BossBar getBossBar(Entity entity);
+    public BossBar getBossBar(Entity entity);
 
     public BoundingBox getBoundingBox(Entity handle);
 

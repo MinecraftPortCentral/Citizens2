@@ -21,6 +21,7 @@ import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.persistence.PersistenceLoader;
 import net.citizensnpcs.api.util.DataKey;
 import net.citizensnpcs.api.util.Messaging;
+import net.citizensnpcs.conv.Conversation;
 import net.citizensnpcs.editor.Editor;
 import net.citizensnpcs.trait.waypoint.WaypointProvider.EnumerableWaypointProvider;
 import net.citizensnpcs.trait.waypoint.triggers.TriggerEditPrompt;
@@ -29,7 +30,7 @@ import net.citizensnpcs.util.Util;
 import net.minecraft.util.text.TextFormatting;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.conv.Conversation;
+import org.spongepowered.api.entity.Transform;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.block.InteractBlockEvent;
@@ -59,9 +60,9 @@ public class LinearWaypointProvider implements EnumerableWaypointProvider {
             return null;
         } else if (args.hasValueFlag("at")) {
             try {
-                Location<World> location = CommandContext.parseLocation(args.getSenderLocation(), args.getFlag("at"));
-                if (location != null) {
-                    waypoints.add(new Waypoint(location));
+                Transform<World> transform = CommandContext.parseLocation(args.getSenderLocation(), args.getFlag("at"));
+                if (transform != null) {
+                    waypoints.add(new Waypoint(transform.getLocation()));
                 }
             } catch (CommandException e) {
                 Messaging.sendError(sender, e.getMessage());
@@ -360,7 +361,7 @@ public class LinearWaypointProvider implements EnumerableWaypointProvider {
     }
 
     private class LinearWaypointGoal implements Goal {
-        private final Location<World> cachedLocation = new Location<World>(null, 0, 0, 0);
+        private final Location<World> cachedLocation = new Location<>(null, 0, 0, 0);
         private Waypoint currentDestination;
         private Iterator<Waypoint> itr;
         private boolean paused;
@@ -456,7 +457,7 @@ public class LinearWaypointProvider implements EnumerableWaypointProvider {
             this.selector = selector;
             Waypoint next = itr.next();
             Location<World> npcLoc = npc.getEntity().getLocation();
-            if (npcLoc.getWorld() != next.getLocation().getWorld() || npcLoc.distanceSquared(next.getLocation()) < npc
+            if (npcLoc.getExtent() != next.getLocation().getExtent() || npcLoc.getPosition().distanceSquared(next.getLocation().getPosition()) < npc
                     .getNavigator().getLocalParameters().distanceMargin()) {
                 return false;
             }

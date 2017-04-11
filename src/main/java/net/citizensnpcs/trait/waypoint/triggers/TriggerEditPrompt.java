@@ -2,14 +2,14 @@ package net.citizensnpcs.trait.waypoint.triggers;
 
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.util.Messaging;
+import net.citizensnpcs.conv.Conversation;
+import net.citizensnpcs.conv.ConversationContext;
+import net.citizensnpcs.conv.Prompt;
+import net.citizensnpcs.conv.StringPrompt;
 import net.citizensnpcs.trait.waypoint.Waypoint;
 import net.citizensnpcs.trait.waypoint.WaypointEditor;
 import net.citizensnpcs.util.Messages;
 import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.conv.Conversation;
-import org.spongepowered.api.conv.ConversationContext;
-import org.spongepowered.api.conv.Prompt;
-import org.spongepowered.api.conv.StringPrompt;
 import org.spongepowered.api.entity.living.player.Player;
 
 public class TriggerEditPrompt extends StringPrompt {

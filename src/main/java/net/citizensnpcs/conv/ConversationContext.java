@@ -1,4 +1,4 @@
-package org.spongepowered.api.conv;
+package net.citizensnpcs.conv;
 
 import com.google.common.collect.Maps;
 import org.spongepowered.api.command.CommandSource;

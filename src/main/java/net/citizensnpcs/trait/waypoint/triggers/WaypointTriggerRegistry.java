@@ -5,7 +5,7 @@ import com.google.common.collect.Maps;
 import net.citizensnpcs.api.persistence.PersistenceLoader;
 import net.citizensnpcs.api.persistence.Persister;
 import net.citizensnpcs.api.util.DataKey;
-import org.spongepowered.api.conv.Prompt;
+import net.citizensnpcs.conv.Prompt;
 
 import java.util.Map;
 

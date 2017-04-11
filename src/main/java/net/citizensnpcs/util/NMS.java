@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 
 import com.flowpowered.math.vector.Vector3d;
+import com.flowpowered.math.vector.Vector3i;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.GameProfileRepository;
 
@@ -20,6 +21,7 @@ import net.citizensnpcs.npc.ai.MCNavigationStrategy.MCNavigator;
 import net.citizensnpcs.npc.ai.MCTargetStrategy.TargetNavigator;
 import net.citizensnpcs.npc.skin.SkinnableEntity;
 import net.minecraft.block.Block;
+import org.spongepowered.api.block.BlockType;
 import org.spongepowered.api.block.tileentity.Skull;
 import org.spongepowered.api.boss.BossBar;
 import org.spongepowered.api.entity.Entity;
@@ -58,7 +60,7 @@ public class NMS {
     }
 
     public static BlockBreaker getBlockBreaker(Entity entity, Block targetBlock, BlockBreakerConfiguration config) {
-        return BRIDGE.getBlockBreaker(entity, targetBlock, config);
+        return BRIDGE.getBlockBreaker(entity, (BlockType) targetBlock, config);
     }
 
     public static BossBar getBossBar(org.spongepowered.api.entity.Entity entity) {
@@ -118,11 +120,11 @@ public class NMS {
         return BRIDGE.getStepHeight(entity);
     }
 
-    public static MCNavigator getTargetNavigator(Entity entity, Iterable<Vector3d> dest, NavigatorParameters params) {
+    public static MCNavigator getTargetNavigator(Entity entity, Iterable<Vector3i> dest, NavigatorParameters params) {
         return BRIDGE.getTargetNavigator(entity, dest, params);
     }
 
-    public static MCNavigator getTargetNavigator(Entity entity, Location dest, NavigatorParameters params) {
+    public static MCNavigator getTargetNavigator(Entity entity, Location<World> dest, NavigatorParameters params) {
         return BRIDGE.getTargetNavigator(entity, dest, params);
     }
 
